@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InvestControl</title>
+
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<header>
+  <h1>📊 InvestBord </h1>
+  <p>Resumo financeiro</p>
+</header>
+
+<section class="cards">
+  <div class="card total">
+    <span>Total</span>
+    <h2 id="totalGeral">R$ 0,00</h2>
+  </div>
+
+  <div class="card pago">
+    <span>Pago</span>
+    <h2 id="totalPago">R$ 0,00</h2>
+  </div>
+
+  <div class="card pendente">
+    <span>Pendente</span>
+    <h2 id="totalPendente">R$ 0,00</h2>
+  </div>
+</section>
+
+<section class="grafico">
+  <canvas id="graficoFinanceiro"></canvas>
+</section>
+
+<script src="js/dashboard.js"></script>
+</body>
+</html>
