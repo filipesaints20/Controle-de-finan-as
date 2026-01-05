@@ -1,7 +1,7 @@
 // ===============================
 // CONFIG
 // ===============================
-const API_URL = "SUA_URL_DO_APPS_SCRIPT_AQUI";
+const API_URL = "https://script.google.com/macros/s/AKfycbzLMXyt2QHPt5KWl4ZbFYKJKaCfVD7cYkYFhNM3Zg3_qEp-yt7ksFCRP0b_7eoRpQ_O/exec";
 
 // ===============================
 // ESTADO
