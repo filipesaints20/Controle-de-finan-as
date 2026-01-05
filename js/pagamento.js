@@ -1,4 +1,4 @@
-const API_URL = 'https://script.google.com/macros/s/AKfycbz9XiZnpy344Fa_F6BGqqxEFYqWbskY2ThiE_MjLeJsncvJyqdfs_iDvVaS9-KQTDg0fA/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbz1uozXvdFllDE_nAn5WFTdLsbl6UDa6L_zI64qVCXNZfHlkGPNPl_s9NvEIgk2W_An/exec';
 
 async function carregarCustos() {
   const res = await fetch(API_URL);
