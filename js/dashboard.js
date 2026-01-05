@@ -22,9 +22,9 @@ async function carregarDashboard() {
   let pendente = 0;
 
   dados.forEach(item => {
-    total += parseValor(item.valor_total);
-    pago += parseValor(item.valor_pago);
-    pendente += parseValor(item.saldo);
+    total += parseValor(item.Valor_total);
+    pago += parseValor(item.Valor_pago);
+    pendente += parseValor(item.Saldo);
   });
 
   document.getElementById('totalGeral').innerText =
