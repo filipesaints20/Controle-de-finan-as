@@ -1,4 +1,4 @@
-const API_URL = 'https://script.google.com/macros/s/AKfycbz1uozXvdFllDE_nAn5WFTdLsbl6UDa6L_zI64qVCXNZfHlkGPNPl_s9NvEIgk2W_An/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwFH_n3QSf0V6F9rZIQ5OHECFlPsMsRy34xThsBMCdZBJqWynXXXjDp-Gsm9j7hVxDK/exec';
 
 function gerarGrafico(pago, pendente) {
   const ctx = document.getElementById('graficoFinanceiro');
