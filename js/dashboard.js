@@ -23,9 +23,9 @@ async function carregarDashboard() {
   let pendente = 0;
 
   dados.forEach(item => {
-    total += Number(item.Valor_total) || 0;
-    pago += Number(item.Valor_pago) || 0;
-    pendente += Number(item.Saldo) || 0;
+    total += Number(item.valor_total) || 0;
+    pago += Number(item.valor_pago) || 0;
+    pendente += Number(item.saldo) || 0;
   });
 
   document.getElementById('totalGeral').innerText =
