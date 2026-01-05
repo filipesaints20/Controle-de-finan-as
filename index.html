@@ -1,41 +1,47 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>InvestControl</title>
 
-  <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script defer src="app.js"></script>
+
+  <style>
+    body { font-family: Arial; margin: 0; padding: 20px; }
+    .card { padding: 15px; background: #f3f3f3; margin-bottom: 10px; }
+    button { padding: 10px; margin-top: 10px; }
+    section { margin-top: 20px; }
+  </style>
 </head>
+
 <body>
 
-<header>
-  <h1>📊 InvestBord </h1>
-  <p>Resumo financeiro</p>
-</header>
+<h1>💰 InvestControl</h1>
 
-<section class="cards">
-  <div class="card total">
-    <span>Total</span>
-    <h2 id="totalGeral">R$ 0,00</h2>
-  </div>
+<button onclick="mostrarPagamento()">Registrar Pagamento</button>
+<button onclick="mostrarDashboard()">Dashboard</button>
 
-  <div class="card pago">
-    <span>Pago</span>
-    <h2 id="totalPago">R$ 0,00</h2>
-  </div>
+<!-- DASHBOARD -->
+<section id="dashboard">
+  <div class="card">Total: <span id="totalGeral">R$ 0,00</span></div>
+  <div class="card">Pago: <span id="totalPago">R$ 0,00</span></div>
+  <div class="card">Pendente: <span id="totalPendente">R$ 0,00</span></div>
 
-  <div class="card pendente">
-    <span>Pendente</span>
-    <h2 id="totalPendente">R$ 0,00</h2>
-  </div>
+  <canvas id="graficoFinanceiro" height="200"></canvas>
 </section>
 
-<section class="grafico">
-  <canvas id="graficoFinanceiro"></canvas>
+<!-- PAGAMENTO -->
+<section id="telaPagamento" style="display:none">
+  <h2>Registrar Pagamento</h2>
+
+  <form id="formPagamento">
+    <select id="selectCusto" required></select><br><br>
+    <input type="number" id="valorPago" placeholder="Valor pago" step="0.01" required><br><br>
+    <input type="text" id="obsPagamento" placeholder="Observação"><br><br>
+    <button type="submit">Salvar Pagamento</button>
+  </form>
 </section>
 
-<script src="js/dashboard.js"></script>
 </body>
 </html>
