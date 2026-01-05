@@ -8,72 +8,25 @@ const API_URL = "https://script.google.com/macros/s/AKfycbw7MbUY-e5RSapZ9kVNLmOQ
 // ===============================
 let despesas = [];
 let pagamentos = [];
+let chart;
 
 // ===============================
 // INIT
 // ===============================
-document.addEventListener("DOMContentLoaded", () => {
-  carregarDados();
-  atualizarDashboard();
+document.addEventListener("DOMContentLoaded", async () => {
+  await carregarDadosAPI();
+  atualizarTudo();
 });
 
 // ===============================
-// NAVEGAÇÃO
+// API
 // ===============================
-function showPage(id, el) {
-  document.querySelectorAll(".page-section").forEach(s => s.classList.remove("active-section"));
-  document.getElementById(id).classList.add("active-section");
+async function carregarDadosAPI() {
+  const res = await fetch(API_URL);
+  const data = await res.json();
 
-  if (el) {
-    document.querySelectorAll(".menu-item").forEach(m => m.classList.remove("active"));
-    el.classList.add("active");
-  }
-}
-
-// ===============================
-// DESPESAS
-// ===============================
-const formDespesa = document.getElementById("formDespesa");
-if (formDespesa) {
-  formDespesa.addEventListener("submit", e => {
-    e.preventDefault();
-
-    const despesa = {
-      id: Date.now(),
-      descricao: desc.value,
-      categoria: categoria.value,
-      valor_total: Number(valorTotal.value),
-      vencimento: vencimento.value,
-      criado_em: new Date().toLocaleDateString("pt-BR")
-    };
-
-    despesas.push(despesa);
-    salvarLocal();
-    enviarParaSheet(despesa, "despesa");
-
-    formDespesa.reset();
-    atualizarTudo();
-  });
-}
-
-// ===============================
-// PAGAMENTOS
-// ===============================
-function registrarPagamento(idDespesa) {
-  const valor = prompt("Valor pago:");
-  if (!valor) return;
-
-  const pagamento = {
-    id: Date.now(),
-    id_despesa: idDespesa,
-    valor: Number(valor),
-    data: new Date().toLocaleDateString("pt-BR")
-  };
-
-  pagamentos.push(pagamento);
-  salvarLocal();
-  enviarParaSheet(pagamento, "pagamento");
-  atualizarTudo();
+  despesas = data.despesas || [];
+  pagamentos = data.pagamentos || [];
 }
 
 // ===============================
@@ -84,10 +37,11 @@ function atualizarDashboard() {
   let totalPago = 0;
 
   despesas.forEach(d => {
-    totalDespesas += d.valor_total;
-    totalPago += pagamentos
-      .filter(p => p.id_despesa === d.id)
-      .reduce((s, p) => s + p.valor, 0);
+    totalDespesas += Number(d.valor_total) || 0;
+  });
+
+  pagamentos.forEach(p => {
+    totalPago += Number(p.valor) || 0;
   });
 
   const totalPendente = totalDespesas - totalPago;
@@ -100,7 +54,28 @@ function atualizarDashboard() {
 }
 
 // ===============================
-// TABELA PAGAMENTOS
+// PAGAMENTOS (REGISTRO)
+// ===============================
+async function registrarPagamento(idDespesa) {
+  const valor = prompt("Valor pago:");
+  if (!valor || isNaN(valor)) return;
+
+  await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      tipo: "pagamento",
+      id_despesa: idDespesa,
+      valor: Number(valor)
+    })
+  });
+
+  await carregarDadosAPI();
+  atualizarTudo();
+}
+
+// ===============================
+// TABELA DE DESPESAS
 // ===============================
 function renderPagamentos() {
   const tbody = document.getElementById("tabelaPagamentos");
@@ -110,8 +85,8 @@ function renderPagamentos() {
 
   despesas.forEach(d => {
     const pago = pagamentos
-      .filter(p => p.id_despesa === d.id)
-      .reduce((s, p) => s + p.valor, 0);
+      .filter(p => p.id_despesa == d.id)
+      .reduce((s, p) => s + Number(p.valor), 0);
 
     const pendente = d.valor_total - pago;
 
@@ -141,7 +116,7 @@ function renderHistorico() {
   tbody.innerHTML = "";
 
   pagamentos.forEach(p => {
-    const despesa = despesas.find(d => d.id === p.id_despesa);
+    const despesa = despesas.find(d => d.id == p.id_despesa);
 
     tbody.innerHTML += `
       <tr>
@@ -157,7 +132,6 @@ function renderHistorico() {
 // ===============================
 // GRÁFICO
 // ===============================
-let chart;
 function gerarGrafico(pago, pendente) {
   const ctx = document.getElementById("graficoFinanceiro");
   if (!ctx) return;
@@ -176,32 +150,6 @@ function gerarGrafico(pago, pendente) {
 }
 
 // ===============================
-// STORAGE
-// ===============================
-function salvarLocal() {
-  localStorage.setItem("despesas", JSON.stringify(despesas));
-  localStorage.setItem("pagamentos", JSON.stringify(pagamentos));
-}
-
-function carregarDados() {
-  despesas = JSON.parse(localStorage.getItem("despesas")) || [];
-  pagamentos = JSON.parse(localStorage.getItem("pagamentos")) || [];
-}
-
-// ===============================
-// GOOGLE SHEETS
-// ===============================
-function enviarParaSheet(obj, tipo) {
-  if (!API_URL.includes("script.google")) return;
-
-  fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ tipo, ...obj })
-  });
-}
-
-// ===============================
 // HELPERS
 // ===============================
 function atualizarTudo() {
@@ -211,5 +159,9 @@ function atualizarTudo() {
 }
 
 function moeda(v) {
-  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  return Number(v).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  });
 }
+
