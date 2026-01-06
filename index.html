@@ -3,188 +3,236 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle Financeiro</title>
-
-    <!-- Ícones -->
+    <title>FinanceControl | Gestão Inteligente</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
-
-    <!-- CSS -->
-    <link rel="stylesheet" href="css/style.css">
-
-    <!-- Chart.js -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --primary: #4361ee;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f1c40f;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --sidebar-width: 260px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body { background-color: #f1f5f9; display: flex; color: var(--dark); }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--dark);
+            color: white;
+            position: fixed;
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #fff;
+            padding-left: 10px;
+        }
+
+        .menu-category {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--gray);
+            letter-spacing: 1px;
+            margin: 1.5rem 0 0.5rem 10px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            color: #cbd5e1;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .menu-item:hover, .menu-item.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            padding: 2rem;
+        }
+
+        .page-header { margin-bottom: 2rem; }
+        .page-header h2 { font-size: 1.8rem; font-weight: 600; }
+        .page-header p { color: var(--gray); }
+
+        /* CARDS & KPI */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        .kpi-label { color: var(--gray); font-size: 0.9rem; font-weight: 600; }
+        .kpi-value { font-size: 1.5rem; font-weight: 600; margin-top: 5px; }
+
+        /* TABELA */
+        .table-container { overflow-x: auto; margin-top: 1rem; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { padding: 12px; border-bottom: 2px solid #f1f5f9; color: var(--gray); font-size: 0.85rem; }
+        td { padding: 15px 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+
+        /* FORMULÁRIOS */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label { display: block; margin-bottom: 5px; font-size: 0.85rem; font-weight: 600; }
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            outline: none;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { opacity: 0.9; }
+
+        /* AUXILIARES */
+        .text-green { color: var(--success); }
+        .text-red { color: var(--danger); }
+        .page-section { display: none; }
+        .active-section { display: block; animation: fadeIn 0.4s ease-in-out; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .chart-container { height: 300px; position: relative; }
+    </style>
 </head>
 <body>
 
-<!-- SIDEBAR -->
 <nav class="sidebar">
     <div class="brand">
-        <span class="material-icons-outlined">account_balance</span>
+        <span class="material-icons-outlined">payments</span>
         FinanceControl
     </div>
 
     <div class="nav-links">
-        <div class="menu-category">Financeiro</div>
-
+        <div class="menu-category">Menu Principal</div>
         <a class="menu-item active" onclick="showPage('dashboard', this)">
             <span class="material-icons-outlined">dashboard</span> Dashboard
         </a>
-
         <a class="menu-item" onclick="showPage('lancamentos', this)">
-            <span class="material-icons-outlined">sync_alt</span> Lançamentos
+            <span class="material-icons-outlined">add_circle_outline</span> Lançamentos
         </a>
-
         <a class="menu-item" onclick="showPage('pagamentos', this)">
-            <span class="material-icons-outlined">payments</span> Pagamentos
+            <span class="material-icons-outlined">account_balance_wallet</span> Pagamentos
         </a>
-
         <a class="menu-item" onclick="showPage('historico', this)">
             <span class="material-icons-outlined">history</span> Histórico
         </a>
     </div>
-
-    <div style="border-top:1px solid #333; padding-top:10px">
-        <a class="menu-item" onclick="showPage('config', this)">
-            <span class="material-icons-outlined">settings</span> Configurações
-        </a>
-    </div>
 </nav>
 
-<!-- CONTEÚDO -->
 <main class="main-content">
-
-<!-- DASHBOARD -->
-<section id="dashboard" class="page-section active-section">
-    <div class="page-header">
-        <div>
-            <h2>Resumo Financeiro</h2>
-            <p>Entradas, saídas e valores pendentes</p>
-        </div>
-    </div>
-
-    <div class="kpi-grid">
-        <div class="card">
-            <div class="kpi-label">Total de Despesas</div>
-            <div class="kpi-value" id="totalDespesas">R$ 0,00</div>
+    <section id="dashboard" class="page-section active-section">
+        <div class="page-header">
+            <h2>Dashboard Financeiro</h2>
+            <p>Visão geral da sua saúde financeira</p>
         </div>
 
-        <div class="card">
-            <div class="kpi-label">Total Pago</div>
-            <div class="kpi-value text-green" id="totalPago">R$ 0,00</div>
+        <div class="kpi-grid">
+            <div class="card">
+                <div class="kpi-label">Despesas Totais</div>
+                <div id="totalDespesas" class="kpi-value">R$ 0,00</div>
+            </div>
+            <div class="card">
+                <div class="kpi-label">Total Pago</div>
+                <div id="totalPago" class="kpi-value text-green">R$ 0,00</div>
+            </div>
+            <div class="card">
+                <div class="kpi-label">Total Pendente</div>
+                <div id="totalPendente" class="kpi-value text-red">R$ 0,00</div>
+            </div>
         </div>
 
         <div class="card">
-            <div class="kpi-label">Total Pendente</div>
-            <div class="kpi-value text-red" id="totalPendente">R$ 0,00</div>
-        </div>
-    </div>
-
-    <div class="charts-row">
-        <div class="card">
-            <div class="kpi-label">Pagos x Pendentes</div>
+            <div class="kpi-label" style="margin-bottom: 1rem;">Comparativo Fluxo</div>
             <div class="chart-container">
                 <canvas id="graficoFinanceiro"></canvas>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- LANÇAMENTOS -->
-<section id="lancamentos" class="page-section">
-    <div class="page-header">
-        <h2>Registrar Despesa</h2>
-    </div>
-
-    <div class="card">
-        <form id="formDespesa">
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Descrição</label>
-                    <input type="text" id="desc" class="form-control" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Categoria</label>
-                    <input type="text" id="categoria" class="form-control">
-                </div>
-
-                <div class="form-group">
-                    <label>Valor Total</label>
-                    <input type="number" id="valorTotal" step="0.01" class="form-control" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Vencimento</label>
-                    <input type="date" id="vencimento" class="form-control">
-                </div>
-            </div>
-
-            <button class="btn btn-primary" type="submit">Salvar Despesa</button>
-        </form>
-    </div>
-</section>
-
-<!-- PAGAMENTOS -->
-<section id="pagamentos" class="page-section">
-    <div class="page-header">
-        <h2>Registrar Pagamento</h2>
-        <p>Baixar valores de despesas existentes</p>
-    </div>
-
-    <div class="card">
-        <div class="table-container">
-            <table>
-                <thead>
-                <tr>
-                    <th>Descrição</th>
-                    <th>Total</th>
-                    <th>Pago</th>
-                    <th>Pendente</th>
-                    <th>Ação</th>
-                </tr>
-                </thead>
-                <tbody id="tabelaPagamentos">
-                <!-- JS -->
-                </tbody>
-            </table>
+    <section id="lancamentos" class="page-section">
+        <div class="page-header">
+            <h2>Nova Despesa</h2>
+            <p>Cadastre uma nova conta para pagar</p>
         </div>
-    </div>
-</section>
-
-<!-- HISTÓRICO -->
-<section id="historico" class="page-section">
-    <div class="page-header">
-        <h2>Histórico Financeiro</h2>
-    </div>
-
-    <div class="card">
-        <div class="table-container">
-            <table>
-                <thead>
-                <tr>
-                    <th>Data</th>
-                    <th>Descrição</th>
-                    <th>Tipo</th>
-                    <th>Valor</th>
-                </tr>
-                </thead>
-                <tbody id="historicoTable"></tbody>
-            </table>
+        <div class="card">
+            <form id="formDespesa">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Descrição</label>
+                        <input type="text" id="desc" class="form-control" placeholder="Ex: Aluguel" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Categoria</label>
+                        <input type="text" id="categoria" class="form-control" placeholder="Ex: Moradia">
+                    </div>
+                    <div class="form-group">
+                        <label>Valor Total</label>
+                        <input type="number" id="valorTotal" step="0.01" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Vencimento</label>
+                        <input type="date" id="vencimento" class="form-control">
+                    </div>
+                </div>
+                <button class="btn btn-primary" type="submit">Salvar Registro</button>
+            </form>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- CONFIG -->
-<section id="config" class="page-section">
-    <div class="page-header">
-        <h2>Configurações</h2>
-    </div>
-    <div class="card">
-        <p>Sistema integrado ao Google Sheets</p>
-    </div>
-</section>
-
-</main>
+    </main>
 
 <script src="js/script.js"></script>
 </body>
