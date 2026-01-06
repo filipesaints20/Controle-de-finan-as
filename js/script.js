@@ -1,50 +1,7 @@
-// ===============================
-// CONFIGURAÇÃO
-// ===============================
-// COLOQUE SUA URL DO GOOGLE AQUI
-const API_URL = "https://script.google.com/macros/s/AKfycbzV_KzGNPaiF3VIHnZzsmZkIXFkLOzTurRPA-9ncpL5NYipg2umuHUvdCn1G_m8hYW5JA/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbxWy9wO327WcVTDMQhpLh_ijukFADgH7eO59ADh2ofeaFuAh-9jHI0Hj1-gIGkRv6ZGgQ/exec"; 
 
-let despesas = [];
-let pagamentos = [];
-let chart;
+let despesas = [], pagamentos = [], chart;
 
-// ===============================
-// INICIALIZAÇÃO
-// ===============================
-window.onload = () => {
-    carregarDadosAPI();
-    
-    // Configura o formulário de cadastro
-    const form = document.getElementById("formDespesa");
-    if(form) {
-        form.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const dados = {
-                tipo: "despesa",
-                descricao: document.getElementById("desc").value,
-                valor_total: Number(document.getElementById("valorTotal").value),
-                categoria: "Geral",
-                vencimento: new Date().toISOString().split('T')[0]
-            };
-            await enviarDados(dados);
-            e.target.reset();
-        });
-    }
-};
-
-// ===============================
-// FUNÇÕES DE NAVEGAÇÃO
-// ===============================
-function showPage(id, el) {
-    document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active-section'));
-    document.getElementById(id).classList.add('active-section');
-    document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-    if(el) el.classList.add('active');
-}
-
-// ===============================
-// COMUNICAÇÃO COM API
-// ===============================
 async function carregarDadosAPI() {
     try {
         const res = await fetch(API_URL);
@@ -52,135 +9,86 @@ async function carregarDadosAPI() {
         despesas = data.despesas || [];
         pagamentos = data.pagamentos || [];
         atualizarTudo();
-    } catch (e) {
-        console.error("Erro ao carregar dados:", e);
-    }
+    } catch (e) { console.error("Erro:", e); }
 }
 
-async function enviarDados(objeto) {
-    try {
-        // Usamos no-cors para evitar bloqueios do navegador com Google Apps Script
-        await fetch(API_URL, {
-            method: "POST",
-            mode: "no-cors",
-            body: JSON.stringify(objeto)
-        });
-        alert("Enviado com sucesso! Atualizando...");
-        setTimeout(carregarDadosAPI, 1500);
-    } catch (e) {
-        alert("Erro na conexão.");
-    }
-}
-
-// ===============================
-// FUNÇÃO DE PAGAMENTO (O BOTÃO)
-// ===============================
-async function registrarPagamento(idDespesa) {
-    if (!idDespesa || idDespesa === "undefined") {
-        alert("Erro: Esta despesa não possui um ID válido na planilha.");
-        return;
-    }
-
-    const valor = prompt("Qual valor deseja pagar?");
-    if (!valor || isNaN(valor.replace(',', '.'))) return;
-
-    const dados = {
-        tipo: "pagamento",
-        id_despesa: idDespesa,
-        valor: parseFloat(valor.replace(',', '.'))
-    };
-
-    await enviarDados(dados);
-}
-
-// ===============================
-// ATUALIZAÇÃO DA TELA
-// ===============================
 function atualizarTudo() {
     let tDesp = 0, tPago = 0;
-
-    // Soma Despesas (Trata Maiúsculas/Minúsculas da Planilha)
-    despesas.forEach(d => {
-        let v = d.valor_total || d.Valor_total || 0;
-        tDesp += parseFloat(v.toString().replace(',', '.')) || 0;
-    });
-
-    // Soma Pagamentos
-    pagamentos.forEach(p => {
-        let v = p.valor || p.Valor || 0;
-        tPago += parseFloat(v.toString().replace(',', '.')) || 0;
-    });
+    despesas.forEach(d => tDesp += parseFloat(d.valor_total || d.Valor_total || 0));
+    pagamentos.forEach(p => tPago += parseFloat(p.valor || p.valor_pago || p.Valor_pago || 0));
 
     document.getElementById("totalDespesas").innerText = moeda(tDesp);
     document.getElementById("totalPago").innerText = moeda(tPago);
     document.getElementById("totalPendente").innerText = moeda(tDesp - tPago);
 
-    renderTabelas();
-    renderGrafico(tPago, tDesp - tPago);
+    renderTabelas(tPago, tDesp - tPago);
 }
 
-function renderTabelas() {
+function renderTabelas(pagoG, pendG) {
     const tPag = document.getElementById("tabelaPagamentos");
-    const tHist = document.getElementById("historicoTable");
-    if(!tPag || !tHist) return;
-
-    tPag.innerHTML = ""; 
-    tHist.innerHTML = "";
+    tPag.innerHTML = "";
 
     despesas.forEach(d => {
-        // Encontra o ID (pode ser 'id' ou 'Id')
-        const idAtual = d.id || d.Id;
-        
-        // Calcula quanto já foi pago para esta despesa específica
-        const pagoIndividual = pagamentos
-            .filter(p => (p.id_despesa || p.Id_despesa) == idAtual)
-            .reduce((s, p) => s + (parseFloat(p.valor || p.Valor) || 0), 0);
+        const idD = (d.id || d.Id).toString();
+        const pagoI = pagamentos
+            .filter(p => (p.id_despesa || p.id_custos || p.Id_custos).toString() === idD)
+            .reduce((s, p) => s + parseFloat(p.valor || p.valor_pago || 0), 0);
 
-        const valorTotal = parseFloat(d.valor_total || d.Valor_total) || 0;
-        const restante = valorTotal - pagoIndividual;
-
-        tPag.innerHTML += `
-            <tr>
-                <td>${d.descricao || d.Descricao}</td>
-                <td>${moeda(valorTotal)}</td>
-                <td class="text-green">${moeda(pagoIndividual)}</td>
-                <td>
-                    <button class="btn" onclick="registrarPagamento('${idAtual}')">
-                        Pagar
-                    </button>
-                </td>
+        const totalD = parseFloat(d.valor_total || 0);
+        if (totalD - pagoI > 0) {
+            tPag.innerHTML += `<tr>
+                <td>${d.descricao}</td>
+                <td>${moeda(totalD)}</td>
+                <td>${moeda(pagoI)}</td>
+                <td><button class="btn" style="padding:5px" onclick="registrarPagamento('${idD}')">Pagar</button></td>
             </tr>`;
+        }
     });
-
-    pagamentos.forEach(p => {
-        const d = despesas.find(x => (x.id || x.Id) == (p.id_despesa || p.Id_despesa));
-        tHist.innerHTML += `
-            <tr>
-                <td>${p.data || '-'}</td>
-                <td>${d ? (d.descricao || d.Descricao) : 'Pagamento'}</td>
-                <td>${moeda(p.valor || p.Valor)}</td>
-            </tr>`;
-    });
+    renderGrafico(pagoG, pendG);
 }
 
-function renderGrafico(pago, pendente) {
-    const canvas = document.getElementById("graficoFinanceiro");
-    if(!canvas) return;
-    const ctx = canvas.getContext("2d");
+async function registrarPagamento(id) {
+    const v = prompt("Quanto deseja pagar?");
+    if(!v || isNaN(v.replace(',','.'))) return;
+    
+    await fetch(API_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify({ tipo: "pagamento", id_despesa: id, valor: v.replace(',','.') })
+    });
+    alert("Processando... Aguarde 2 segundos.");
+    setTimeout(carregarDadosAPI, 2000);
+}
+
+function renderGrafico(pago, pend) {
+    const ctx = document.getElementById("graficoFinanceiro").getContext("2d");
     if(chart) chart.destroy();
     chart = new Chart(ctx, {
         type: 'doughnut',
-        data: {
-            labels: ['Pago', 'Pendente'],
-            datasets: [{
-                data: [pago, pendente],
-                backgroundColor: ['#2ecc71', '#e74c3c']
-            }]
-        },
-        options: { maintainAspectRatio: false }
+        data: { labels: ['Pago', 'Pendente'], datasets: [{ data: [pago, pend], backgroundColor: ['#2ecc71', '#e74c3c'] }] },
+        options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
     });
 }
 
-function moeda(v) {
-    return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+function showPage(id, el) {
+    document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active-section'));
+    document.getElementById(id).classList.add('active-section');
+    document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+    el.classList.add('active');
 }
+
+function moeda(v) { return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+window.onload = carregarDadosAPI;
+
+document.getElementById("formDespesa").onsubmit = async (e) => {
+    e.preventDefault();
+    const d = {
+        tipo: "despesa",
+        descricao: document.getElementById("desc").value,
+        valor_total: document.getElementById("valorTotal").value
+    };
+    await fetch(API_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(d) });
+    alert("Salvo!");
+    e.target.reset();
+    setTimeout(carregarDadosAPI, 2000);
+};
