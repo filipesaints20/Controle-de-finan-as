@@ -1,94 +1,107 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbxWy9wO327WcVTDMQhpLh_ijukFADgH7eO59ADh2ofeaFuAh-9jHI0Hj1-gIGkRv6ZGgQ/exec"; 
-
-let despesas = [], pagamentos = [], chart;
-
-async function carregarDadosAPI() {
-    try {
-        const res = await fetch(API_URL);
-        const data = await res.json();
-        despesas = data.despesas || [];
-        pagamentos = data.pagamentos || [];
-        atualizarTudo();
-    } catch (e) { console.error("Erro:", e); }
-}
-
-function atualizarTudo() {
-    let tDesp = 0, tPago = 0;
-    despesas.forEach(d => tDesp += parseFloat(d.valor_total || d.Valor_total || 0));
-    pagamentos.forEach(p => tPago += parseFloat(p.valor || p.valor_pago || p.Valor_pago || 0));
-
-    document.getElementById("totalDespesas").innerText = moeda(tDesp);
-    document.getElementById("totalPago").innerText = moeda(tPago);
-    document.getElementById("totalPendente").innerText = moeda(tDesp - tPago);
-
-    renderTabelas(tPago, tDesp - tPago);
-}
-
-function renderTabelas(pagoG, pendG) {
-    const tPag = document.getElementById("tabelaPagamentos");
-    tPag.innerHTML = "";
-
-    despesas.forEach(d => {
-        const idD = (d.id || d.Id).toString();
-        const pagoI = pagamentos
-            .filter(p => (p.id_despesa || p.id_custos || p.Id_custos).toString() === idD)
-            .reduce((s, p) => s + parseFloat(p.valor || p.valor_pago || 0), 0);
-
-        const totalD = parseFloat(d.valor_total || 0);
-        if (totalD - pagoI > 0) {
-            tPag.innerHTML += `<tr>
-                <td>${d.descricao}</td>
-                <td>${moeda(totalD)}</td>
-                <td>${moeda(pagoI)}</td>
-                <td><button class="btn" style="padding:5px" onclick="registrarPagamento('${idD}')">Pagar</button></td>
-            </tr>`;
-        }
-    });
-    renderGrafico(pagoG, pendG);
-}
-
-async function registrarPagamento(id) {
-    const v = prompt("Quanto deseja pagar?");
-    if(!v || isNaN(v.replace(',','.'))) return;
-    
-    await fetch(API_URL, {
-        method: "POST",
-        mode: "no-cors",
-        body: JSON.stringify({ tipo: "pagamento", id_despesa: id, valor: v.replace(',','.') })
-    });
-    alert("Processando... Aguarde 2 segundos.");
-    setTimeout(carregarDadosAPI, 2000);
-}
-
-function renderGrafico(pago, pend) {
-    const ctx = document.getElementById("graficoFinanceiro").getContext("2d");
-    if(chart) chart.destroy();
-    chart = new Chart(ctx, {
-        type: 'doughnut',
-        data: { labels: ['Pago', 'Pendente'], datasets: [{ data: [pago, pend], backgroundColor: ['#2ecc71', '#e74c3c'] }] },
-        options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-    });
-}
-
-function showPage(id, el) {
-    document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active-section'));
-    document.getElementById(id).classList.add('active-section');
-    document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-    el.classList.add('active');
-}
-
-function moeda(v) { return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
-window.onload = carregarDadosAPI;
-
-document.getElementById("formDespesa").onsubmit = async (e) => {
-    e.preventDefault();
-    const d = {
-        tipo: "despesa",
-        descricao: document.getElementById("desc").value,
-        valor_total: document.getElementById("valorTotal").value
-    };
-    await fetch(API_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(d) });
-    alert("Salvo!");
-    e.target.reset();
-    setTimeout(carregarDadosAPI, 2000);
+const AppConfig = {
+    URL: "https://script.google.com/macros/s/AKfycbwjKljG-d6X6Edmk9kp1abY1zA4lay8eS4Ylg9Z2Ro4BJZQysr5lrmeJMLY5iMkuVNPmA/exec",
+    Colors: { success: '#2ecc71', danger: '#e74c3c', primary: '#4361ee' }
 };
+
+const App = {
+    state: { despesas: [], pagamentos: [], chart: null },
+
+    async init() {
+        this.toggleLoader(true);
+        try {
+            const res = await fetch(AppConfig.URL);
+            const data = await res.json();
+            this.state.despesas = data.despesas || [];
+            this.state.pagamentos = data.pagamentos || [];
+            this.refreshUI();
+        } catch (err) {
+            alert("Erro ao sincronizar dados com a nuvem.");
+        } finally {
+            this.toggleLoader(false);
+        }
+    },
+
+    refreshUI() {
+        const totals = this.calculateTotals();
+        document.getElementById("totalDespesas").innerText = this.formatBRL(totals.bruto);
+        document.getElementById("totalPago").innerText = this.formatBRL(totals.pago);
+        document.getElementById("totalPendente").innerText = this.formatBRL(totals.pendente);
+        
+        this.renderTables();
+        this.renderChart(totals.pago, totals.pendente);
+    },
+
+    calculateTotals() {
+        const bruto = this.state.despesas.reduce((acc, d) => acc + (parseFloat(d.valor_total) || 0), 0);
+        const pago = this.state.pagamentos.reduce((acc, p) => acc + (parseFloat(p.valor) || 0), 0);
+        return { bruto, pago, pendente: bruto - pago };
+    },
+
+    renderTables() {
+        const pagBody = document.getElementById("tbl-pagamentos");
+        pagBody.innerHTML = `<thead><tr><th>DESCRIÇÃO</th><th>VALOR</th><th>PAGO</th><th>AÇÃO</th></tr></thead><tbody>`;
+        
+        this.state.despesas.forEach(d => {
+            const id = (d.id || d.Id).toString();
+            const pagoD = this.state.pagamentos
+                .filter(p => (p.id_despesa || p.id_custos).toString() === id)
+                .reduce((acc, p) => acc + parseFloat(p.valor), 0);
+            
+            if(parseFloat(d.valor_total) - pagoD > 0) {
+                pagBody.innerHTML += `<tr>
+                    <td><b>${d.descricao}</b></td>
+                    <td>${this.formatBRL(d.valor_total)}</td>
+                    <td style="color:var(--success)">${this.formatBRL(pagoD)}</td>
+                    <td><button class="btn" style="padding: 5px 12px; font-size: 0.8rem" onclick="App.pay('${id}')">QUITAR</button></td>
+                </tr>`;
+            }
+        });
+
+        const histBody = document.getElementById("tbl-historico");
+        histBody.innerHTML = `<thead><tr><th>DATA</th><th>ITEM</th><th>VALOR</th></tr></thead>`;
+        [...this.state.pagamentos].reverse().forEach(p => {
+            const item = this.state.despesas.find(d => (d.id || d.Id).toString() === (p.id_despesa || p.id_custos).toString());
+            histBody.innerHTML += `<tr><td>${p.data || p.data_pagamento}</td><td>${item ? item.descricao : '---'}</td><td style="font-weight:700">${this.formatBRL(p.valor)}</td></tr>`;
+        });
+    },
+
+    async pay(id) {
+        const val = prompt("Confirmar valor do pagamento:");
+        if(!val) return;
+
+        this.toggleLoader(true);
+        await fetch(AppConfig.URL, {
+            method: "POST",
+            mode: "no-cors",
+            body: JSON.stringify({ tipo: "pagamento", id_despesa: id, valor: val.replace(',','.') })
+        });
+        setTimeout(() => this.init(), 1500);
+    },
+
+    renderChart(pago, pendente) {
+        const ctx = document.getElementById("mainChart").getContext("2d");
+        if(this.state.chart) this.state.chart.destroy();
+        this.state.chart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Efetivado', 'Pendente'],
+                datasets: [{ data: [pago, pendente], backgroundColor: [AppConfig.Colors.success, AppConfig.Colors.danger], borderWidth: 0 }]
+            },
+            options: { maintainAspectRatio: false, cutout: '80%', plugins: { legend: { position: 'bottom' } } }
+        });
+    },
+
+    formatBRL(v) { return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); },
+    toggleLoader(show) { document.getElementById("loader").style.display = show ? "block" : "none"; }
+};
+
+const Router = {
+    go(id, el) {
+        document.querySelectorAll('.page-section').forEach(s => s.style.display = 'none');
+        document.getElementById(id).style.display = 'block';
+        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+        el.classList.add('active');
+    }
+};
+
+window.onload = () => App.init();

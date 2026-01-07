@@ -2,98 +2,107 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FinanceControl</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Finance Pro | Smart Dashboard</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --primary: #4361ee; --success: #2ecc71; --danger: #e74c3c; --dark: #1e293b; --gray: #64748b; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: #f1f5f9; display: flex; flex-direction: column; min-height: 100vh; }
+        :root { 
+            --primary: #4361ee; --success: #2ecc71; --danger: #e74c3c; 
+            --dark: #0f172a; --slate: #64748b; --bg: #f8fafc;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: var(--dark); display: flex; flex-direction: column; min-height: 100vh; }
 
-        /* Sidebar Desktop / Bottom Nav Mobile */
-        .sidebar { width: 260px; background: var(--dark); color: white; position: fixed; height: 100vh; padding: 2rem 1rem; z-index: 1000; }
-        .brand { display: flex; align-items: center; gap: 10px; font-size: 1.2rem; font-weight: 600; margin-bottom: 2rem; }
-        .menu-item { display: flex; align-items: center; gap: 12px; padding: 12px; color: #cbd5e1; text-decoration: none; border-radius: 8px; cursor: pointer; margin-bottom: 5px; }
-        .menu-item.active { background: var(--primary); color: white; }
+        /* Estilo Profissional de Navegação */
+        .sidebar { width: 260px; background: var(--dark); color: white; position: fixed; height: 100vh; padding: 2rem 1.5rem; transition: 0.3s; z-index: 1000; }
+        .menu-item { 
+            display: flex; align-items: center; gap: 15px; padding: 14px; 
+            color: #94a3b8; text-decoration: none; border-radius: 12px; 
+            cursor: pointer; margin-bottom: 8px; transition: 0.2s;
+        }
+        .menu-item:hover { background: rgba(255,255,255,0.05); color: white; }
+        .menu-item.active { background: var(--primary); color: white; box-shadow: 0 10px 15px -3px rgba(67, 97, 238, 0.3); }
 
-        .main-content { margin-left: 260px; padding: 2rem; flex: 1; }
-        .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
-        .kpi-value { font-size: 1.5rem; font-weight: 600; }
+        .main-content { margin-left: 260px; padding: 2.5rem; flex: 1; max-width: 1400px; }
 
-        input, button { width: 100%; padding: 14px; margin-top: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 1rem; }
-        .btn { background: var(--primary); color: white; border: none; font-weight: 600; cursor: pointer; }
+        /* Dashboard Cards */
+        .kpi-card { 
+            background: white; padding: 1.5rem; border-radius: 16px; 
+            border: 1px solid #e2e8f0; transition: transform 0.2s;
+        }
+        .kpi-card:hover { transform: translateY(-5px); }
+        .label { font-size: 0.75rem; font-weight: 700; color: var(--slate); text-transform: uppercase; letter-spacing: 0.05em; }
+        .value { font-size: 1.75rem; font-weight: 700; margin-top: 0.5rem; }
 
-        .table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 450px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        /* Tabelas Profissionais */
+        .table-wrapper { background: white; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; margin-top: 1.5rem; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f1f5f9; padding: 1rem; text-align: left; font-size: 0.75rem; color: var(--slate); }
+        td { padding: 1rem; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
 
-        .page-section { display: none; }
-        .active-section { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* Feedback de Carregamento */
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 4px; background: #e2e8f0; overflow: hidden; display: none; }
+        .loading-bar { width: 40%; height: 100%; background: var(--primary); animation: loading 1.5s infinite linear; }
+        @keyframes loading { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
 
-        @media (max-width: 768px) {
-            .sidebar { width: 100%; height: 65px; bottom: 0; top: auto; padding: 0; flex-direction: row; display: flex; justify-content: space-around; }
+        @media (max-width: 1024px) {
+            .sidebar { width: 100%; height: 70px; bottom: 0; top: auto; flex-direction: row; padding: 0 10px; justify-content: space-around; }
+            .main-content { margin-left: 0; padding: 1.5rem; padding-bottom: 100px; }
             .brand { display: none; }
-            .menu-item { flex-direction: column; gap: 4px; font-size: 0.7rem; padding: 10px; flex: 1; text-align: center; }
-            .main-content { margin-left: 0; padding: 1rem; padding-bottom: 80px; }
-            .kpi-grid { grid-template-columns: 1fr; }
+            .menu-item { flex-direction: column; gap: 4px; font-size: 0.65rem; padding: 10px; }
         }
     </style>
 </head>
 <body>
+    <div id="loader" class="loading-overlay"><div class="loading-bar"></div></div>
+
     <nav class="sidebar">
-        <div class="brand"><span class="material-icons-outlined">payments</span> Finance</div>
-        <a class="menu-item active" onclick="showPage('dashboard', this)"><span class="material-icons-outlined">dashboard</span><span>Home</span></a>
-        <a class="menu-item" onclick="showPage('lancamentos', this)"><span class="material-icons-outlined">add_circle</span><span>Novo</span></a>
-        <a class="menu-item" onclick="showPage('pagamentos', this)"><span class="material-icons-outlined">receipt_long</span><span>Contas</span></a>
-        <a class="menu-item" onclick="showPage('historico', this)"><span class="material-icons-outlined">history</span><span>Extrato</span></a>
+        <div class="brand" style="margin-bottom: 3rem;">
+            <span class="material-icons-outlined" style="color: var(--primary); font-size: 2rem;">insights</span>
+            <h2 style="font-size: 1.25rem;">FinancePro</h2>
+        </div>
+        <a class="menu-item active" onclick="Router.go('dashboard', this)"><span class="material-icons-outlined">grid_view</span>Dashboard</a>
+        <a class="menu-item" onclick="Router.go('lancamentos', this)"><span class="material-icons-outlined">add_chart</span>Lançamentos</a>
+        <a class="menu-item" onclick="Router.go('pagamentos', this)"><span class="material-icons-outlined">payments</span>Pagamentos</a>
+        <a class="menu-item" onclick="Router.go('historico', this)"><span class="material-icons-outlined">history_edu</span>Histórico</a>
     </nav>
 
     <main class="main-content">
         <section id="dashboard" class="page-section active-section">
-            <div class="kpi-grid">
-                <div class="card"><div>Bruto</div><div id="totalDespesas" class="kpi-value">R$ 0,00</div></div>
-                <div class="card"><div>Pago</div><div id="totalPago" class="kpi-value" style="color:var(--success)">R$ 0,00</div></div>
-                <div class="card"><div>Pendente</div><div id="totalPendente" class="kpi-value" style="color:var(--danger)">R$ 0,00</div></div>
+            <div class="kpi-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem;">
+                <div class="kpi-card"><div class="label">Volume Total</div><div id="totalDespesas" class="value">---</div></div>
+                <div class="kpi-card"><div class="label">Efetivado</div><div id="totalPago" class="value" style="color: var(--success);">---</div></div>
+                <div class="kpi-card"><div class="label">Em Aberto</div><div id="totalPendente" class="value" style="color: var(--danger);">---</div></div>
             </div>
-            <div class="card"><canvas id="graficoFinanceiro" style="max-height: 250px;"></canvas></div>
-        </section>
-
-        <section id="lancamentos" class="page-section">
-            <div class="card">
-                <h2>Nova Despesa</h2>
-                <form id="formDespesa">
-                    <input type="text" id="desc" placeholder="Ex: Aluguel" required>
-                    <input type="number" id="valorTotal" step="0.01" placeholder="Valor (0,00)" required>
-                    <button class="btn" type="submit">Salvar</button>
-                </form>
+            <div class="card" style="margin-top: 1.5rem; height: 350px;">
+                <canvas id="mainChart"></canvas>
             </div>
         </section>
 
-        <section id="pagamentos" class="page-section">
-            <div class="card">
-                <h2>Contas em Aberto</h2>
-                <div class="table-container">
-                    <table>
-                        <thead><tr><th>Item</th><th>Total</th><th>Pago</th><th>Ação</th></tr></thead>
-                        <tbody id="tabelaPagamentos"></tbody>
-                    </table>
-                </div>
+        <section id="lancamentos" class="page-section" style="display:none">
+            <div class="kpi-card" style="max-width: 500px;">
+                <h3 style="margin-bottom: 1rem;">Novo Registro</h3>
+                <input type="text" id="in-desc" placeholder="Descrição do custo">
+                <input type="number" id="in-valor" placeholder="Valor (BRL)">
+                <button class="btn" style="margin-top: 1rem;" onclick="App.saveDespesa()">Confirmar Lançamento</button>
             </div>
         </section>
 
-        <section id="historico" class="page-section">
-            <div class="card">
-                <h2>Histórico</h2>
-                <div class="table-container">
-                    <table id="historicoTable"></table>
-                </div>
+        <section id="pagamentos" class="page-section" style="display:none">
+            <div class="table-wrapper">
+                <table id="tbl-pagamentos"></table>
+            </div>
+        </section>
+
+        <section id="historico" class="page-section" style="display:none">
+            <div class="table-wrapper">
+                <table id="tbl-historico"></table>
             </div>
         </section>
     </main>
+
     <script src="js/script.js"></script>
 </body>
 </html>
