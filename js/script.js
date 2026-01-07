@@ -1,4 +1,4 @@
-const API = "SUA_URL_DO_DEPLOY_AQUI"; // COLOQUE SEU LINK AQUI
+const API = "https://script.google.com/macros/s/AKfycbx8cUwmG8YUoJ84odRc3YxiOguuKCC1kQ_zigZqNrRUlA4Wq_ZNCaPrOCOmn5C8RrHEzg/exec"; // COLOQUE SEU LINK AQUI
 
 const App = {
     data: { despesas: [], pagamentos: [] },
