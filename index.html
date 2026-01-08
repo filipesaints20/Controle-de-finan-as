@@ -2,91 +2,74 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FinancePro | Smart Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>FinanceControl Pro</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --p: #4361ee; --s: #2ecc71; --d: #e74c3c; --bg: #f8fafc; --text: #0f172a; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; }
 
-        /* Sidebar & Mobile Nav */
         .nav { width: 260px; background: #1e293b; color: white; position: fixed; height: 100vh; padding: 2rem 1.5rem; z-index: 100; }
-        .nav-item { display: flex; align-items: center; gap: 12px; padding: 14px; color: #94a3b8; text-decoration: none; border-radius: 12px; cursor: pointer; margin-bottom: 8px; transition: 0.3s; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 14px; color: #94a3b8; text-decoration: none; border-radius: 12px; cursor: pointer; margin-bottom: 8px; }
         .nav-item.active { background: var(--p); color: white; box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4); }
 
-        .content { margin-left: 260px; padding: 2.5rem; flex: 1; }
+        .content { margin-left: 260px; padding: 2.5rem; }
 
-        /* Cards Estilizados */
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-        .card { background: white; padding: 1.5rem; border-radius: 20px; border: 1px solid #e2e8f0; position: relative; overflow: hidden; }
-        .card::before { content: ""; position: absolute; left: 0; top: 0; width: 4px; height: 100%; background: #e2e8f0; }
-        .card.pago::before { background: var(--s); }
-        .card.pendente::before { background: var(--d); }
-
-        .label { font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+        .card { background: white; padding: 1.5rem; border-radius: 20px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
         .val { font-size: 1.8rem; font-weight: 700; margin-top: 0.5rem; }
 
-        /* Botão Premium */
-        .btn-pay { background: var(--p); color: white; border: none; padding: 8px 16px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        .btn-pay:active { transform: scale(0.95); }
-
-        /* Tabelas */
-        .table-res { overflow-x: auto; background: white; border-radius: 20px; border: 1px solid #e2e8f0; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #f1f5f9; padding: 1rem; text-align: left; font-size: 0.75rem; color: #64748b; }
-        td { padding: 1rem; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th { text-align: left; padding: 12px; color: #64748b; font-size: 0.75rem; background: #f1f5f9; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
 
         @media (max-width: 768px) {
-            .nav { width: 100%; height: 75px; bottom: 0; top: auto; display: flex; flex-direction: row; padding: 0 10px; justify-content: space-around; align-items: center; }
+            .nav { width: 100%; height: 75px; bottom: 0; top: auto; display: flex; flex-direction: row; padding: 0; }
             .content { margin-left: 0; padding: 1.5rem 1rem 100px 1rem; }
-            .nav-item { flex-direction: column; gap: 4px; font-size: 0.65rem; padding: 10px; }
-            .val { font-size: 1.5rem; }
+            .nav-item { flex-direction: column; font-size: 0.65rem; flex: 1; justify-content: center; }
         }
     </style>
 </head>
 <body>
     <nav class="nav">
         <div class="nav-item active" onclick="Route('dash', this)"><span class="material-icons-outlined">dashboard</span><span>Resumo</span></div>
-        <div class="nav-item" onclick="Route('add', this)"><span class="material-icons-outlined">add_circle</span><span>Novo</span></div>
-        <div class="nav-item" onclick="Route('pay', this)"><span class="material-icons-outlined">account_balance_wallet</span><span>Pagar</span></div>
-        <div class="nav-item" onclick="Route('hist', this)"><span class="material-icons-outlined">history</span><span>Extrato</span></div>
+        <div class="nav-item" onclick="Route('pay', this)"><span class="material-icons-outlined">payments</span><span>Pagar</span></div>
+        <div class="nav-item" onclick="Route('hist', this)"><span class="material-icons-outlined">history</span><span>Histórico</span></div>
     </nav>
 
     <main class="content">
         <section id="dash" class="page">
             <div class="grid">
-                <div class="card">
-                    <div class="label">Total Bruto</div>
-                    <div id="bruto" class="val">R$ 0,00</div>
-                </div>
-                <div class="card pago">
-                    <div class="label">Total Efetivado</div>
-                    <div id="pago" class="val" style="color: var(--s);">R$ 0,00</div>
-                </div>
-                <div class="card pendente">
-                    <div class="label">Total em Aberto</div>
-                    <div id="pend" class="val" style="color: var(--d);">R$ 0,00</div>
-                </div>
+                <div class="card"><div class="val" id="bruto">R$ 0,00</div><small>Total Bruto</small></div>
+                <div class="card"><div class="val" id="pago" style="color:var(--s)">R$ 0,00</div><small>Efetivado</small></div>
+                <div class="card"><div class="val" id="pend" style="color:var(--d)">R$ 0,00</div><small>Pendente</small></div>
             </div>
-            <div class="card" style="height: 350px;">
-                <canvas id="chart"></canvas>
-            </div>
+            <div class="card" style="height: 300px;"><canvas id="chart"></canvas></div>
         </section>
 
         <section id="pay" class="page" style="display:none">
-            <h2 style="margin-bottom: 1.5rem;">Contas Pendentes</h2>
-            <div class="table-res">
+            <div class="card">
+                <h2>Contas a Pagar</h2>
                 <table>
-                    <thead><tr><th>DESCRIÇÃO</th><th>TOTAL</th><th>RESTANTE</th><th>AÇÃO</th></tr></thead>
+                    <thead><tr><th>ITEM</th><th>TOTAL</th><th>RESTANTE</th><th>AÇÃO</th></tr></thead>
                     <tbody id="lista-pagar"></tbody>
                 </table>
             </div>
         </section>
 
-        </main>
+        <section id="hist" class="page" style="display:none">
+            <div class="card">
+                <h2>Extrato de Pagamentos</h2>
+                <table>
+                    <thead><tr><th>DATA</th><th>ITEM</th><th>VALOR PAGO</th></tr></thead>
+                    <tbody id="lista-historico"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
     <script src="js/script.js"></script>
 </body>
 </html>

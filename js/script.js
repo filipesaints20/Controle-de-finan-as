@@ -1,4 +1,4 @@
-const API = "https://script.google.com/macros/s/AKfycbx8cUwmG8YUoJ84odRc3YxiOguuKCC1kQ_zigZqNrRUlA4Wq_ZNCaPrOCOmn5C8RrHEzg/exec"; // COLOQUE SEU LINK AQUI
+const API = "https://script.google.com/macros/s/AKfycby2lrbhsMbfp0proCDju5KQQ30tFd6xaGwjZMitRKZNseHq3xso0IC5FBV7YiULNu-rHg/exec"; // <--- COLOQUE SEU LINK AQUI
 
 const App = {
     data: { despesas: [], pagamentos: [] },
@@ -11,60 +11,52 @@ const App = {
             this.data.despesas = json.despesas || [];
             this.data.pagamentos = json.pagamentos || [];
             this.render();
-        } catch (e) { console.error("Erro ao carregar dados"); }
+        } catch (e) { console.error("Erro na sincronização"); }
     },
 
     render() {
-        // Cálculo de Totais Blindado contra NaN
-        const tBruto = this.data.despesas.reduce((acc, d) => acc + (d.valor_total || d.valor || 0), 0);
-        const tPago = this.data.pagamentos.reduce((acc, p) => acc + (p.valor_pago || p.valor || 0), 0);
-        const tPend = tBruto - tPago;
-
+        const tBruto = this.data.despesas.reduce((acc, d) => acc + (d.valor_total || 0), 0);
+        const tPago = this.data.pagamentos.reduce((acc, p) => acc + (p.valor_pago || 0), 0);
+        
         document.getElementById("bruto").innerText = this.fmt(tBruto);
         document.getElementById("pago").innerText = this.fmt(tPago);
-        document.getElementById("pend").innerText = this.fmt(tPend);
+        document.getElementById("pend").innerText = this.fmt(tBruto - tPago);
 
-        this.renderPagar();
-        this.renderChart(tPago, tPend);
+        this.renderTabelas();
+        this.renderChart(tPago, tBruto - tPago);
     },
 
-    renderPagar() {
-        const list = document.getElementById("lista-pagar");
-        if(!list) return;
-        list.innerHTML = "";
+    renderTabelas() {
+        const pList = document.getElementById("lista-pagar");
+        const hList = document.getElementById("lista-historico");
+        pList.innerHTML = ""; hList.innerHTML = "";
 
+        // 1. Tabela de Pagamentos Pendentes
         this.data.despesas.forEach(d => {
-            const id = (d.id || d.id_custos).toString();
-            // Filtra pagamentos vinculados a esta despesa
+            const id = (d.id || "").toString();
             const pagoD = this.data.pagamentos
-                .filter(p => (p.id_custos || p.id_despesa).toString() === id)
+                .filter(p => (p.id_custos || p.id_despesa || "").toString() === id)
                 .reduce((acc, p) => acc + (p.valor_pago || 0), 0);
             
-            const totalD = d.valor_total || 0;
-            const restante = totalD - pagoD;
-
+            const restante = (d.valor_total || 0) - pagoD;
             if (restante > 0) {
-                list.innerHTML += `<tr>
-                    <td><b>${d.descricao}</b></td>
-                    <td>${this.fmt(totalD)}</td>
-                    <td style="color:var(--d); font-weight:700">${this.fmt(restante)}</td>
-                    <td><button class="btn-pay" onclick="App.makePay('${id}')">BAIXAR</button></td>
-                </tr>`;
+                pList.innerHTML += `<tr><td>${d.descricao}</td><td>${this.fmt(d.valor_total)}</td><td style="color:var(--d)">${this.fmt(restante)}</td><td><button onclick="App.pay('${id}')" style="background:var(--p); color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer">PAGAR</button></td></tr>`;
             }
+        });
+
+        // 2. Histórico Ativo (Cruzamento de Dados)
+        [...this.data.pagamentos].reverse().forEach(p => {
+            const idV = (p.id_custos || p.id_despesa || "").toString();
+            const original = this.data.despesas.find(d => (d.id || "").toString() === idV);
+            hList.innerHTML += `<tr><td>${p.data_pagamento || p.data}</td><td>${original ? original.descricao : 'Item ' + idV}</td><td style="color:var(--s); font-weight:700">${this.fmt(p.valor_pago || 0)}</td></tr>`;
         });
     },
 
-    async makePay(id) {
-        const val = prompt("Qual valor deseja pagar?");
-        if(!val) return;
-
-        await fetch(API, {
-            method: "POST",
-            mode: "no-cors",
-            body: JSON.stringify({ tipo: "pagamento", id_despesa: id, valor: val.replace(',','.') })
-        });
-        
-        alert("Pagamento enviado! Atualizando em 2 segundos...");
+    async pay(id) {
+        const v = prompt("Quanto deseja pagar?");
+        if(!v) return;
+        await fetch(API, { method: "POST", mode: "no-cors", body: JSON.stringify({ tipo: "pagamento", id_despesa: id, valor: v.replace(',','.') }) });
+        alert("Enviado! Atualizando...");
         setTimeout(() => this.init(), 2000);
     },
 
@@ -73,11 +65,8 @@ const App = {
         if(this.chart) this.chart.destroy();
         this.chart = new Chart(ctx, {
             type: 'doughnut',
-            data: {
-                labels: ['Pago', 'Pendente'],
-                datasets: [{ data: [pago, pend], backgroundColor: ['#2ecc71', '#e74c3c'], borderJoinStyle: 'round' }]
-            },
-            options: { maintainAspectRatio: false, cutout: '85%' }
+            data: { labels: ['Pago', 'Pendente'], datasets: [{ data: [pago, pend], backgroundColor: ['#2ecc71', '#e74c3c'] }] },
+            options: { maintainAspectRatio: false, cutout: '80%' }
         });
     },
 
