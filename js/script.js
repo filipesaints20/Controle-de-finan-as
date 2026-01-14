@@ -1,11 +1,11 @@
-const API = "https://script.google.com/macros/s/AKfycby2lrbhsMbfp0proCDju5KQQ30tFd6xaGwjZMitRKZNseHq3xso0IC5FBV7YiULNu-rHg/exec";
+const API = "https://script.google.com/macros/s/AKfycbyLnV0u4MyS_Id0aej0Gr2LCQEoOamLmVaeiogX9KIn7jB-FJTcgMurJu3v55AbmvHaiw/exec";
 
 const App = {
     data: { despesas: [], pagamentos: [] },
     chart: null,
 
     async init() {
-        // Feedback visual de carregamento
+
         document.body.style.opacity = "0.6";
         try {
             const res = await fetch(API);
@@ -40,7 +40,7 @@ const App = {
         pList.innerHTML = ""; 
         hList.innerHTML = "";
 
-        // 1. Tabela de Pagamentos Pendentes (Visual Profissional)
+ 
         this.data.despesas.forEach(d => {
             const id = (d.id || "").toString();
             const pagoD = this.data.pagamentos
@@ -68,7 +68,7 @@ const App = {
             }
         });
 
-        // 2. Histórico (Visual Profissional)
+
         let histHTML = `<table><thead><tr><th>DATA</th><th>ITEM</th><th>VALOR PAGO</th><th>STATUS</th></tr></thead><tbody>`;
         
         [...this.data.pagamentos].reverse().slice(0, 10).forEach(p => {
@@ -93,7 +93,7 @@ const App = {
         const v = prompt(`Quanto deseja pagar para: ${nome}?`);
         if(!v) return;
 
-        // Botão de feedback pode ser implementado aqui
+
         try {
             await fetch(API, { 
                 method: "POST", 
@@ -102,7 +102,7 @@ const App = {
             });
             
             alert("Pagamento enviado com sucesso!");
-            // Recarrega os dados para atualizar a tela
+
             setTimeout(() => this.init(), 1500);
         } catch (err) {
             alert("Erro ao processar pagamento.");
@@ -139,7 +139,7 @@ const App = {
     }
 };
 
-// Navegação entre páginas
+
 function Route(id, el) {
     document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
     document.getElementById(id).style.display = 'block';

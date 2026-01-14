@@ -2,262 +2,176 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FinanceControl Pro</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { 
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --bg: #f8fafc; 
-            --card: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            --nav-bg: #0f172a;
+            --primary: #4f46e5; --success: #10b981; --danger: #ef4444; 
+            --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --border: #e2e8f0;
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        
-        body { background: var(--bg); color: var(--text-main); min-height: 100vh; display: flex; }
+        body { background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
 
-        /* Sidebar Modernizada */
-        .nav { 
-            width: 280px; 
-            background: var(--nav-bg); 
-            color: white; 
-            position: fixed; 
-            height: 100vh; 
-            padding: 2rem 1rem; 
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            z-index: 100; 
-        }
-
-        .nav-logo {
-            font-weight: 700;
-            font-size: 1.25rem;
-            padding: 0 1rem 2rem 1rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: white;
-        }
-
-        .nav-item { 
-            display: flex; 
-            align-items: center; 
-            gap: 12px; 
-            padding: 12px 16px; 
-            color: #94a3b8; 
-            text-decoration: none; 
-            border-radius: 10px; 
-            cursor: pointer; 
-            transition: all 0.2s ease;
-            font-weight: 500;
-        }
-
-        .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+        /* Sidebar */
+        .nav { width: 260px; background: #0f172a; color: white; position: fixed; height: 100vh; padding: 2rem 1rem; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px; color: #94a3b8; text-decoration: none; border-radius: 10px; cursor: pointer; margin-bottom: 5px; transition: 0.3s; }
         .nav-item.active { background: var(--primary); color: white; }
-
-        /* Área de Conteúdo */
-        .content { margin-left: 280px; padding: 2.5rem; width: 100%; max-width: 1400px; }
-
-        header { margin-bottom: 2.5rem; }
-        header h1 { font-size: 1.8rem; font-weight: 700; }
-        header p { color: var(--text-muted); margin-top: 4px; }
-
-        /* Cards e Grid */
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
         
-        .card { 
-            background: var(--card); 
-            padding: 1.5rem; 
-            border-radius: 16px; 
-            border: 1px solid var(--border);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
+        /* Content */
+        .content { margin-left: 260px; padding: 2rem; width: 100%; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin: 2rem 0; }
+        .card { background: var(--card); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .val { font-size: 1.8rem; font-weight: 700; margin-top: 8px; }
 
-        .card-label { color: var(--text-muted); font-size: 0.875rem; font-weight: 600; display: block; margin-bottom: 8px; }
-        .val { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.5px; }
-
-        /* Tabelas Profissionais */
-        .table-container { overflow-x: auto; margin-top: 1rem; }
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 12px 16px; color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; border-bottom: 1px solid var(--border); }
-        td { padding: 16px; border-bottom: 1px solid var(--border); font-size: 0.9rem; color: var(--text-main); }
-        tr:last-child td { border: none; }
-
-        /* Status Badges */
-        .badge { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
-        .badge-success { background: #dcfce7; color: #15803d; }
-        .badge-pending { background: #fee2e2; color: #b91c1c; }
-
-        /* Botões */
-        .btn { 
-            background: var(--primary); 
-            color: white; 
-            border: none; 
-            padding: 8px 16px; 
-            border-radius: 8px; 
-            font-weight: 600; 
-            cursor: pointer; 
-            transition: background 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .btn:hover { background: var(--primary-hover); }
-
-        @media (max-width: 1024px) {
-            .nav { width: 80px; padding: 2rem 0.5rem; }
-            .nav span:not(.material-icons-outlined), .nav-logo span:not(.material-icons-outlined) { display: none; }
-            .content { margin-left: 80px; }
-        }
-
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th { text-align: left; padding: 12px; color: #64748b; font-size: 0.8rem; border-bottom: 2px solid var(--bg); }
+        td { padding: 14px 12px; border-bottom: 1px solid var(--bg); font-size: 0.9rem; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; }
+        .bg-p { background: #fee2e2; color: #b91c1c; }
+        
+        button { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        
         @media (max-width: 768px) {
-            .nav { width: 100%; height: 70px; bottom: 0; top: auto; flex-direction: row; padding: 0 1rem; }
-            .nav-logo { display: none; }
-            .nav-item { flex: 1; justify-content: center; padding: 10px; }
-            .content { margin-left: 0; padding: 1.5rem 1rem 100px 1rem; }
+            .nav { width: 100%; height: 70px; bottom: 0; display: flex; padding: 0; }
+            .content { margin-left: 0; padding-bottom: 100px; }
+            .nav-item { flex: 1; flex-direction: column; font-size: 0.7rem; justify-content: center; border-radius: 0; }
         }
     </style>
 </head>
 <body>
     <nav class="nav">
-        <div class="nav-logo">
-            <span class="material-icons-outlined" style="color: var(--primary)">account_balance_wallet</span>
-            <span>FinancePro</span>
-        </div>
-        <div class="nav-item active" onclick="Route('dash', this)">
-            <span class="material-icons-outlined">dashboard</span>
-            <span>Dashboard</span>
-        </div>
-        <div class="nav-item" onclick="Route('pay', this)">
-            <span class="material-icons-outlined">payments</span>
-            <span>Pagamentos</span>
-        </div>
-        <div class="nav-item" onclick="Route('hist', this)">
-            <span class="material-icons-outlined">history</span>
-            <span>Histórico</span>
-        </div>
+        <div class="nav-item active" onclick="Route('dash', this)"><span class="material-icons-outlined">dashboard</span><span>Resumo</span></div>
+        <div class="nav-item" onclick="Route('pay', this)"><span class="material-icons-outlined">payments</span><span>Pagar</span></div>
+        <div class="nav-item" onclick="Route('hist', this)"><span class="material-icons-outlined">history</span><span>Histórico</span></div>
     </nav>
 
     <main class="content">
         <section id="dash" class="page">
-            <header>
-                <h1>Visão Geral</h1>
-                <p>Acompanhe sua saúde financeira em tempo real.</p>
-            </header>
-
+            <h1>Dashboard</h1>
             <div class="grid">
-                <div class="card">
-                    <span class="card-label">SALDO TOTAL</span>
-                    <div class="val" id="bruto">R$ 12.450,00</div>
-                </div>
-                <div class="card">
-                    <span class="card-label" style="color: var(--success)">TOTAL PAGO</span>
-                    <div class="val" id="pago" style="color: var(--success)">R$ 8.120,00</div>
-                </div>
-                <div class="card">
-                    <span class="card-label" style="color: var(--danger)">A PAGAR</span>
-                    <div class="val" id="pend" style="color: var(--danger)">R$ 4.330,00</div>
-                </div>
+                <div class="card"><small>TOTAL BRUTO</small><div class="val" id="bruto">R$ 0,00</div></div>
+                <div class="card"><small style="color:var(--success)">EFETIVADO</small><div class="val" id="pago" style="color:var(--success)">R$ 0,00</div></div>
+                <div class="card"><small style="color:var(--danger)">PENDENTE</small><div class="val" id="pend" style="color:var(--danger)">R$ 0,00</div></div>
             </div>
-
-            <div class="card">
-                <h3 style="margin-bottom: 1.5rem;">Fluxo de Caixa</h3>
-                <div style="height: 300px; width: 100%;">
-                    <canvas id="chart"></canvas>
-                </div>
-            </div>
+            <div class="card" style="max-width: 500px; margin: auto;"><canvas id="chart" height="300"></canvas></div>
         </section>
 
         <section id="pay" class="page" style="display:none">
-            <header>
-                <h1>Contas a Pagar</h1>
-                <p>Gerencie suas faturas e vencimentos próximos.</p>
-            </header>
             <div class="card">
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Descrição</th>
-                                <th>Vencimento</th>
-                                <th>Valor</th>
-                                <th>Status</th>
-                                <th>Ação</th>
-                            </tr>
-                        </thead>
-                        <tbody id="lista-pagar">
-                            <tr>
-                                <td><strong>Serviços de Nuvem (AWS)</strong></td>
-                                <td>15 Out, 2023</td>
-                                <td>R$ 450,00</td>
-                                <td><span class="badge badge-pending">Pendente</span></td>
-                                <td><button class="btn">Pagar</button></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                <h2>Contas em Aberto</h2>
+                <table>
+                    <thead><tr><th>ITEM</th><th>TOTAL</th><th>RESTANTE</th><th>AÇÃO</th></tr></thead>
+                    <tbody id="lista-pagar"></tbody>
+                </table>
             </div>
         </section>
 
         <section id="hist" class="page" style="display:none">
-            <header>
-                <h1>Extrato Recente</h1>
-                <p>Histórico completo de transações efetivadas.</p>
-            </header>
             <div class="card">
-                <div class="table-container" id="lista-historico">
-                    <p style="color: var(--text-muted); text-align: center; padding: 2rem;">Carregando histórico...</p>
-                </div>
+                <h2>Extrato de Pagamentos</h2>
+                <table>
+                    <thead><tr><th>DATA</th><th>ITEM</th><th>VALOR</th></tr></thead>
+                    <tbody id="lista-historico"></tbody>
+                </table>
             </div>
         </section>
     </main>
 
     <script>
-        // Lógica de Navegação (SPA simples)
-        function Route(pageId, element) {
+        const API = "COLOQUE_AQUI_A_URL_DA_SUA_IMPLANTAÇÃO";
+
+        const App = {
+            data: { despesas: [], pagamentos: [] },
+            chart: null,
+
+            async init() {
+                try {
+                    const res = await fetch(API);
+                    const json = await res.json();
+                    this.data.despesas = json.despesas;
+                    this.data.pagamentos = json.pagamentos;
+                    this.render();
+                } catch (e) { alert("Erro ao carregar dados. Verifique a URL da API."); }
+            },
+
+            render() {
+                const tBruto = this.data.despesas.reduce((acc, d) => acc + (Number(d.valor_total) || 0), 0);
+                const tPago = this.data.pagamentos.reduce((acc, p) => acc + (Number(p.valor_pago) || 0), 0);
+                
+                document.getElementById("bruto").innerText = this.fmt(tBruto);
+                document.getElementById("pago").innerText = this.fmt(tPago);
+                document.getElementById("pend").innerText = this.fmt(tBruto - tPago);
+
+                this.renderTabelas();
+                this.renderChart(tPago, tBruto - tPago);
+            },
+
+            renderTabelas() {
+                const pList = document.getElementById("lista-pagar");
+                const hList = document.getElementById("lista-historico");
+                pList.innerHTML = ""; hList.innerHTML = "";
+
+                this.data.despesas.forEach(d => {
+                    const id = (d.id || "").toString();
+                    const pagoD = this.data.pagamentos
+                        .filter(p => (p.id_despesa || p.id_custos || "").toString() === id)
+                        .reduce((acc, p) => acc + (Number(p.valor_pago) || 0), 0);
+                    
+                    const restante = Number(d.valor_total) - pagoD;
+                    if (restante > 0) {
+                        pList.innerHTML += `<tr>
+                            <td><strong>${d.descricao}</strong></td>
+                            <td>${this.fmt(d.valor_total)}</td>
+                            <td><span class="badge bg-p">${this.fmt(restante)}</span></td>
+                            <td><button onclick="App.pay('${id}')">PAGAR</button></td>
+                        </tr>`;
+                    }
+                });
+
+                [...this.data.pagamentos].reverse().forEach(p => {
+                    const idV = (p.id_despesa || p.id_custos || "").toString();
+                    const item = this.data.despesas.find(d => (d.id || "").toString() === idV);
+                    hList.innerHTML += `<tr>
+                        <td>${new Date(p.data_pagamento || p.data).toLocaleDateString()}</td>
+                        <td>${item ? item.descricao : 'Item #'+idV}</td>
+                        <td style="color:var(--success); font-weight:700">${this.fmt(p.valor_pago)}</td>
+                    </tr>`;
+                });
+            },
+
+            async pay(id) {
+                const v = prompt("Valor do pagamento:");
+                if(!v) return;
+                await fetch(API, { method: "POST", mode: "no-cors", body: JSON.stringify({ tipo: "pagamento", id_despesa: id, valor: v.replace(',','.') }) });
+                alert("Enviado! Aguarde 2 segundos para atualizar.");
+                setTimeout(() => this.init(), 2000);
+            },
+
+            renderChart(pago, pend) {
+                const ctx = document.getElementById("chart").getContext("2d");
+                if(this.chart) this.chart.destroy();
+                this.chart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: { labels: ['Pago', 'Pendente'], datasets: [{ data: [pago, pend], backgroundColor: ['#10b981', '#ef4444'], borderWidth: 0 }] },
+                    options: { cutout: '80%', plugins: { legend: { position: 'bottom' } } }
+                });
+            },
+
+            fmt(v) { return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+        };
+
+        function Route(id, el) {
             document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            
-            document.getElementById(pageId).style.display = 'block';
-            element.classList.add('active');
+            document.getElementById(id).style.display = 'block';
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
         }
 
-        // Configuração do Gráfico (Chart.js)
-        const ctx = document.getElementById('chart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
-                datasets: [{
-                    label: 'Entradas',
-                    data: [5000, 7000, 6500, 8000, 9500, 12000],
-                    borderColor: '#4f46e5',
-                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
-                    x: { grid: { display: false } }
-                }
-            }
-        });
+        window.onload = () => App.init();
     </script>
 </body>
 </html>
