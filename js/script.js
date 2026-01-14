@@ -2,32 +2,29 @@ const API = "https://script.google.com/macros/s/AKfycbz12mFcfViStYmH9-1X79Ww1AR8
 
 const App = {
     data: { despesas: [] },
-    chart: null,
+    charts: {},
 
     async init() {
         try {
             const res = await fetch(API, { redirect: 'follow' });
             const json = await res.json();
-            // Como seus dados já vêm calculados da planilha (saldo/valor_pago), simplificamos
             this.data.despesas = json.despesas || [];
             this.render();
         } catch (e) {
-            alert("Erro ao carregar dados. Verifique a URL da API.");
+            alert("Erro na API. Verifique a URL.");
         }
     },
 
     render() {
-        // Cálculos baseados no JSON que você enviou
         const tBruto = this.data.despesas.reduce((acc, d) => acc + (Number(d.valor_total) || 0), 0);
         const tPago = this.data.despesas.reduce((acc, d) => acc + (Number(d.valor_pago) || 0), 0);
-        const tPend = tBruto - tPago;
         
         document.getElementById("bruto").innerText = this.fmt(tBruto);
         document.getElementById("pago").innerText = this.fmt(tPago);
-        document.getElementById("pend").innerText = this.fmt(tPend);
+        document.getElementById("pend").innerText = this.fmt(tBruto - tPago);
 
         this.renderTabelas();
-        this.renderChart(tPago, tPend);
+        this.renderCharts(tPago, tBruto - tPago);
     },
 
     renderTabelas() {
@@ -39,55 +36,69 @@ const App = {
             const total = Number(d.valor_total) || 0;
             const pago = Number(d.valor_pago) || 0;
             const saldo = total - pago;
+            const dataVenc = d.vencimento ? new Date(d.vencimento).toLocaleDateString('pt-BR') : '---';
 
-            // Mostrar na lista de contas se ainda houver saldo (ignora itens de valor 0)
             if (saldo > 0.01 && total > 0) {
                 pList.innerHTML += `
                     <tr>
-                        <td><strong>${d.descricao}</strong></td>
-                        <td>${this.fmt(total)}</td>
-                        <td><span class="badge badge-pending">${this.fmt(saldo)}</span></td>
-                        <td><button class="btn-pay" onclick="App.pay('${d.id}', '${d.descricao}')">PAGAR</button></td>
+                        <td><strong>${d.descricao}</strong><br><small>${d.categoria}</small></td>
+                        <td>${dataVenc}</td>
+                        <td><span class="badge badge-pending" style="background:#fee2e2; color:#b91c1c">${this.fmt(saldo)}</span></td>
+                        <td><button class="btn-pay" onclick="App.pay('${d.id}', '${d.descricao}')">Pagar</button></td>
                     </tr>`;
             }
 
-            // Adicionar ao histórico se já houve algum pagamento
             if (pago > 0) {
                 hList.innerHTML += `
                     <tr>
-                        <td>${d.criado_em || '---'}</td>
-                        <td>${d.descricao}</td>
+                        <td>${d.criado_em}</td>
+                        <td><strong>${d.descricao}</strong></td>
                         <td style="color:var(--success); font-weight:700">${this.fmt(pago)}</td>
-                        <td><span class="badge badge-success">${d.status}</span></td>
+                        <td><span class="badge" style="background:#dcfce7; color:#15803d">${d.status}</span></td>
                     </tr>`;
             }
+        });
+    },
+
+    renderCharts(pago, pend) {
+        // 1. Gráfico de Rosca (Doughnut)
+        const ctx1 = document.getElementById("chartDoughnut").getContext("2d");
+        if(this.charts.d) this.charts.d.destroy();
+        this.charts.d = new Chart(ctx1, {
+            type: 'doughnut',
+            data: {
+                labels: ['Efetivado', 'Pendente'],
+                datasets: [{ data: [pago, pend], backgroundColor: ['#10b981', '#f43f5e'], borderWeight: 0, hoverOffset: 20 }]
+            },
+            options: { cutout: '80%', plugins: { legend: { position: 'bottom' } } }
+        });
+
+        // 2. Gráfico de Barras (Gastos por Mês)
+        const meses = {};
+        this.data.despesas.forEach(d => {
+            const mes = d.criado_em || "Outros";
+            meses[mes] = (meses[mes] || 0) + (Number(d.valor_total) || 0);
+        });
+
+        const ctx2 = document.getElementById("chartBars").getContext("2d");
+        if(this.charts.b) this.charts.b.destroy();
+        this.charts.b = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(meses),
+                datasets: [{ label: 'Total por Mês', data: Object.values(meses), backgroundColor: '#6366f1', borderRadius: 8 }]
+            },
+            options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
         });
     },
 
     async pay(id, nome) {
-        const v = prompt(`Valor do pagamento para ${nome}:`);
+        const v = prompt(`Confirmar pagamento para ${nome}:`);
         if(!v) return;
         document.body.style.opacity = "0.5";
-        await fetch(API, { 
-            method: "POST", 
-            mode: "no-cors", 
-            body: JSON.stringify({ tipo: "pagamento", id_despesa: id, valor: v.replace(',','.') }) 
-        });
-        alert("Enviado! Atualizando...");
+        await fetch(API, { method: "POST", mode: "no-cors", body: JSON.stringify({ tipo: "pagamento", id_despesa: id, valor: v.replace(',','.') }) });
+        alert("Sucesso! Atualizando...");
         setTimeout(() => { document.body.style.opacity = "1"; this.init(); }, 2000);
-    },
-
-    renderChart(pago, pend) {
-        const ctx = document.getElementById("chart").getContext("2d");
-        if(this.chart) this.chart.destroy();
-        this.chart = new Chart(ctx, {
-            type: 'doughnut',
-            data: { 
-                labels: ['Pago', 'Pendente'], 
-                datasets: [{ data: [pago, pend], backgroundColor: ['#10b981', '#ef4444'], borderWidth: 0 }] 
-            },
-            options: { cutout: '80%', plugins: { legend: { position: 'bottom' } } }
-        });
     },
 
     fmt(v) { return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
