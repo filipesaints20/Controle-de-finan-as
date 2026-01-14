@@ -1,26 +1,29 @@
-const API = "https://script.google.com/macros/s/AKfycbwd7ReAcu2HmiBtX6EGr852N2p9D9gcZmVKHnmX8xRA1Ufz6bYI_ZDYyJGbK5zPw4g/exec";
+// CONFIGURAÇÃO: Insira aqui a URL gerada na "Nova Implantação" do Google
+const API = "https://script.google.com/macros/s/AKfycbz12mFcfViStYmH9-1X79Ww1AR8nr6kw1xOWg1vQeEIuwqiG2-lZCtBOPZgcs5k17Q/exec;"
 
 const App = {
     data: { despesas: [], pagamentos: [] },
     chart: null,
 
+    // Inicialização: Busca dados da Planilha
     async init() {
-
-        document.body.style.opacity = "0.6";
         try {
-            const res = await fetch(API);
+            console.log("Conectando à API...");
+            const res = await fetch(API, { redirect: 'follow' });
+            if (!res.ok) throw new Error("Falha na rede");
+            
             const json = await res.json();
             this.data.despesas = json.despesas || [];
             this.data.pagamentos = json.pagamentos || [];
+            
             this.render();
         } catch (e) { 
-            console.error("Erro na sincronização");
-            alert("Erro ao carregar dados. Verifique sua conexão.");
-        } finally {
-            document.body.style.opacity = "1";
+            console.error("Erro no Init:", e);
+            alert("Erro ao carregar dados. Verifique a URL da API no arquivo script.js"); 
         }
     },
 
+    // Renderiza os valores nos cards e tabelas
     render() {
         const tBruto = this.data.despesas.reduce((acc, d) => acc + (Number(d.valor_total) || 0), 0);
         const tPago = this.data.pagamentos.reduce((acc, p) => acc + (Number(p.valor_pago) || 0), 0);
@@ -40,26 +43,23 @@ const App = {
         pList.innerHTML = ""; 
         hList.innerHTML = "";
 
- 
+        // Tabela Contas a Pagar
         this.data.despesas.forEach(d => {
             const id = (d.id || "").toString();
-            const pagoD = this.data.pagamentos
-                .filter(p => (p.id_custos || p.id_despesa || "").toString() === id)
+            const pagoJa = this.data.pagamentos
+                .filter(p => (p.id_despesa || p.id_custos || "").toString() === id)
                 .reduce((acc, p) => acc + (Number(p.valor_pago) || 0), 0);
             
-            const restante = (Number(d.valor_total) || 0) - pagoD;
+            const restante = Number(d.valor_total) - pagoJa;
             
-            if (restante > 0) {
+            if (restante > 0.01) {
                 pList.innerHTML += `
                     <tr>
-                        <td>
-                            <div style="font-weight:600; color:var(--text-main)">${d.descricao}</div>
-                            <div style="font-size:0.75rem; color:var(--text-muted)">ID: #${id}</div>
-                        </td>
+                        <td><strong>${d.descricao}</strong></td>
                         <td>${this.fmt(d.valor_total)}</td>
                         <td><span class="badge badge-pending">${this.fmt(restante)}</span></td>
                         <td>
-                            <button class="btn" onclick="App.pay('${id}', '${d.descricao}')">
+                            <button class="btn-pay" onclick="App.pay('${id}', '${d.descricao}')">
                                 <span class="material-icons-outlined" style="font-size:16px">payments</span>
                                 Pagar
                             </button>
@@ -68,32 +68,29 @@ const App = {
             }
         });
 
+        // Tabela Histórico
+        [...this.data.pagamentos].reverse().forEach(p => {
+            const idV = (p.id_despesa || p.id_custos || "").toString();
+            const item = this.data.despesas.find(d => (d.id || "").toString() === idV);
+            const dataVal = p.data_pagamento || p.data || new Date();
 
-        let histHTML = `<table><thead><tr><th>DATA</th><th>ITEM</th><th>VALOR PAGO</th><th>STATUS</th></tr></thead><tbody>`;
-        
-        [...this.data.pagamentos].reverse().slice(0, 10).forEach(p => {
-            const idV = (p.id_custos || p.id_despesa || "").toString();
-            const original = this.data.despesas.find(d => (d.id || "").toString() === idV);
-            const dataFmt = p.data_pagamento || p.data || "---";
-
-            histHTML += `
+            hList.innerHTML += `
                 <tr>
-                    <td style="color:var(--text-muted)">${dataFmt}</td>
-                    <td><strong>${original ? original.descricao : 'Item ' + idV}</strong></td>
-                    <td style="color:var(--success); font-weight:600">${this.fmt(p.valor_pago || 0)}</td>
-                    <td><span class="badge badge-success">Efetivado</span></td>
+                    <td>${new Date(dataVal).toLocaleDateString()}</td>
+                    <td>${item ? item.descricao : 'Item #' + idV}</td>
+                    <td style="color:var(--success); font-weight:700">${this.fmt(p.valor_pago)}</td>
+                    <td><span class="badge badge-success">Pago</span></td>
                 </tr>`;
         });
-        
-        histHTML += `</tbody></table>`;
-        hList.innerHTML = histHTML;
     },
 
+    // Função para enviar pagamento para a Planilha
     async pay(id, nome) {
-        const v = prompt(`Quanto deseja pagar para: ${nome}?`);
-        if(!v) return;
-
-
+        const v = prompt(`Quanto deseja pagar para "${nome}"?`);
+        if (!v) return;
+        
+        document.body.style.opacity = "0.5"; // Feedback visual de loading
+        
         try {
             await fetch(API, { 
                 method: "POST", 
@@ -101,45 +98,49 @@ const App = {
                 body: JSON.stringify({ tipo: "pagamento", id_despesa: id, valor: v.replace(',','.') }) 
             });
             
-            alert("Pagamento enviado com sucesso!");
-
-            setTimeout(() => this.init(), 1500);
+            alert("Pagamento enviado! Atualizando dados...");
+            setTimeout(() => {
+                document.body.style.opacity = "1";
+                this.init();
+            }, 2000);
         } catch (err) {
-            alert("Erro ao processar pagamento.");
+            alert("Erro ao enviar pagamento.");
+            document.body.style.opacity = "1";
         }
     },
 
+    // Configuração do Gráfico
     renderChart(pago, pend) {
         const ctx = document.getElementById("chart").getContext("2d");
-        if(this.chart) this.chart.destroy();
+        if (this.chart) this.chart.destroy();
         
         this.chart = new Chart(ctx, {
             type: 'doughnut',
-            data: {
-                labels: ['Efetivado', 'Pendente'],
-                datasets: [{
-                    data: [pago, pend],
-                    backgroundColor: ['#10b981', '#ef4444'],
+            data: { 
+                labels: ['Efetivado', 'Pendente'], 
+                datasets: [{ 
+                    data: [pago, pend], 
+                    backgroundColor: ['#10b981', '#ef4444'], 
                     borderWidth: 0,
-                    hoverOffset: 4
-                }]
+                    hoverOffset: 15 
+                }] 
             },
-            options: {
-                maintainAspectRatio: false,
-                cutout: '75%',
-                plugins: {
-                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } }
-                }
+            options: { 
+                cutout: '75%', 
+                plugins: { 
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } 
+                } 
             }
         });
     },
 
+    // Formatação de Moeda
     fmt(v) { 
         return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); 
     }
 };
 
-
+// Controle de Navegação das abas
 function Route(id, el) {
     document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
     document.getElementById(id).style.display = 'block';
@@ -147,4 +148,5 @@ function Route(id, el) {
     el.classList.add('active');
 }
 
+// Inicia o App ao carregar a página
 window.onload = () => App.init();
