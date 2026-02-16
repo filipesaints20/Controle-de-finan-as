@@ -1,64 +1,89 @@
-/* ================= TOASTS ================= */
-
+/* ===== TOASTS - ESTILO BANCO ===== */
 #toast-container {
-    position: fixed;
-    top: 24px;
-    right: 24px;
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .toast {
-    background: white;
-    min-width: 300px;
-    max-width: 380px;
-    padding: 16px 18px;
-    border-radius: 16px;
-    display: flex;
-    gap: 14px;
-    align-items: center;
-    box-shadow: 0 20px 40px rgba(15,23,42,.15);
-    border-left: 5px solid;
-    animation: slideIn .3s ease forwards;
+  min-width: 280px;
+  max-width: 340px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #1f2937;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  animation: slideIn 0.4s ease;
+  border-left: 5px solid;
 }
 
-.toast.hide {
-    animation: slideOut .3s ease forwards;
+.toast.success {
+  border-color: #16a34a;
+}
+
+.toast.error {
+  border-color: #dc2626;
+}
+
+.toast.warning {
+  border-color: #f59e0b;
+}
+
+.toast.info {
+  border-color: #2563eb;
 }
 
 .toast-icon {
-    font-size: 26px;
+  font-size: 20px;
+}
+
+.toast-content {
+  flex: 1;
 }
 
 .toast-title {
-    font-weight: 800;
-    font-size: 14px;
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 2px;
 }
 
 .toast-message {
-    font-size: 13px;
-    color: #475569;
+  font-size: 13px;
+  opacity: 0.9;
 }
 
-.toast.success { border-color: #10b981; }
-.toast.success .toast-icon { color: #10b981; }
+.toast-close {
+  cursor: pointer;
+  font-size: 16px;
+  opacity: 0.5;
+}
 
-.toast.error { border-color: #f43f5e; }
-.toast.error .toast-icon { color: #f43f5e; }
-
-.toast.warning { border-color: #f59e0b; }
-.toast.warning .toast-icon { color: #f59e0b; }
-
-.toast.info { border-color: #6366f1; }
-.toast.info .toast-icon { color: #6366f1; }
+.toast-close:hover {
+  opacity: 1;
+}
 
 @keyframes slideIn {
-    from { transform: translateX(120%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
-@keyframes slideOut {
-    to { transform: translateX(120%); opacity: 0; }
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    transform: translateX(50px);
+  }
 }
