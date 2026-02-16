@@ -1,114 +1,138 @@
-const API = "https://script.google.com/macros/s/AKfycbz12mFcfViStYmH9-1X79Ww1AR8nr6kw1xOWg1vQeEIuwqiG2-lZCtBOPZgcs5k17Q/exec";
+const API = "https://script.google.com/macros/s/AKfycbzEv8cdj1HpibaWKuwYzqysHxi0m7Q4tggG3qVozcmE6GR_sSF3AzTStoRtultWVdzh/exec";
 
+/* ========= TOAST ========= */
+function showToast(type, title, message, duration = 4000) {
+    const container = document.getElementById("toast-container");
+    const toast = document.createElement("div");
+    toast.className = `toast ${type}`;
+
+    const icons = {
+        success: "check_circle",
+        error: "error",
+        warning: "warning",
+        info: "info"
+    };
+
+    toast.innerHTML = `
+        <span class="material-icons-outlined toast-icon">${icons[type]}</span>
+        <div>
+            <div class="toast-title">${title}</div>
+            <div class="toast-message">${message}</div>
+        </div>
+    `;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add("hide");
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
+
+/* ========= APP ========= */
 const App = {
     data: { despesas: [] },
     charts: {},
 
     async init() {
         try {
-            const res = await fetch(API, { redirect: 'follow' });
+            const res = await fetch(API);
             const json = await res.json();
             this.data.despesas = json.despesas || [];
             this.render();
-        } catch (e) {
-            alert("Erro na API. Verifique a URL.");
+            showToast("success", "Sistema carregado", "Dados financeiros atualizados.");
+        } catch {
+            showToast("error", "Erro na API", "Não foi possível carregar os dados.");
         }
     },
 
     render() {
-        const tBruto = this.data.despesas.reduce((acc, d) => acc + (Number(d.valor_total) || 0), 0);
-        const tPago = this.data.despesas.reduce((acc, d) => acc + (Number(d.valor_pago) || 0), 0);
-        
-        document.getElementById("bruto").innerText = this.fmt(tBruto);
-        document.getElementById("pago").innerText = this.fmt(tPago);
-        document.getElementById("pend").innerText = this.fmt(tBruto - tPago);
+        const tBruto = this.data.despesas.reduce((a, d) => a + (+d.valor_total || 0), 0);
+        const tPago = this.data.despesas.reduce((a, d) => a + (+d.valor_pago || 0), 0);
+
+        bruto.innerText = this.fmt(tBruto);
+        pago.innerText = this.fmt(tPago);
+        pend.innerText = this.fmt(tBruto - tPago);
 
         this.renderTabelas();
         this.renderCharts(tPago, tBruto - tPago);
     },
 
-    renderTabelas() {
-        const pList = document.getElementById("lista-pagar");
-        const hList = document.getElementById("lista-historico");
-        pList.innerHTML = ""; hList.innerHTML = "";
+   renderTabelas() {
+    const listaPagar = document.getElementById("lista-pagar");
+    const listaHistorico = document.getElementById("lista-historico");
 
-        this.data.despesas.forEach(d => {
-            const total = Number(d.valor_total) || 0;
-            const pago = Number(d.valor_pago) || 0;
-            const saldo = total - pago;
-            const dataVenc = d.vencimento ? new Date(d.vencimento).toLocaleDateString('pt-BR') : '---';
+    listaPagar.innerHTML = "";
+    listaHistorico.innerHTML = "";
 
-            if (saldo > 0.01 && total > 0) {
-                pList.innerHTML += `
-                    <tr>
-                        <td><strong>${d.descricao}</strong><br><small>${d.categoria}</small></td>
-                        <td>${dataVenc}</td>
-                        <td><span class="badge badge-pending" style="background:#fee2e2; color:#b91c1c">${this.fmt(saldo)}</span></td>
-                        <td><button class="btn-pay" onclick="App.pay('${d.id}', '${d.descricao}')">Pagar</button></td>
-                    </tr>`;
-            }
+    this.data.despesas.forEach(d => {
+        const total = Number(d.valor_total) || 0;
+        const pago = Number(d.valor_pago) || 0;
+        const saldo = total - pago;
 
-            if (pago > 0) {
-                hList.innerHTML += `
-                    <tr>
-                        <td>${d.criado_em}</td>
-                        <td><strong>${d.descricao}</strong></td>
-                        <td style="color:var(--success); font-weight:700">${this.fmt(pago)}</td>
-                        <td><span class="badge" style="background:#dcfce7; color:#15803d">${d.status}</span></td>
-                    </tr>`;
-            }
-        });
-    },
+        const venc = d.vencimento
+            ? new Date(d.vencimento).toLocaleDateString("pt-BR")
+            : "---";
 
-    renderCharts(pago, pend) {
-        // 1. Gráfico de Rosca (Doughnut)
-        const ctx1 = document.getElementById("chartDoughnut").getContext("2d");
-        if(this.charts.d) this.charts.d.destroy();
-        this.charts.d = new Chart(ctx1, {
-            type: 'doughnut',
-            data: {
-                labels: ['Efetivado', 'Pendente'],
-                datasets: [{ data: [pago, pend], backgroundColor: ['#10b981', '#f43f5e'], borderWeight: 0, hoverOffset: 20 }]
-            },
-            options: { cutout: '80%', plugins: { legend: { position: 'bottom' } } }
-        });
+        if (saldo > 0) {
+            listaPagar.innerHTML += `
+                <tr>
+                    <td><strong>${d.descricao}</strong><br><small>${d.categoria}</small></td>
+                    <td>${venc}</td>
+                    <td>${this.fmt(saldo)}</td>
+                    <td>
+                        <button class="btn-pay" onclick="App.pay('${d.id}', '${d.descricao}')">
+                            Pagar
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }
 
-        // 2. Gráfico de Barras (Gastos por Mês)
-        const meses = {};
-        this.data.despesas.forEach(d => {
-            const mes = d.criado_em || "Outros";
-            meses[mes] = (meses[mes] || 0) + (Number(d.valor_total) || 0);
-        });
-
-        const ctx2 = document.getElementById("chartBars").getContext("2d");
-        if(this.charts.b) this.charts.b.destroy();
-        this.charts.b = new Chart(ctx2, {
-            type: 'bar',
-            data: {
-                labels: Object.keys(meses),
-                datasets: [{ label: 'Total por Mês', data: Object.values(meses), backgroundColor: '#6366f1', borderRadius: 8 }]
-            },
-            options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-        });
-    },
+        if (pago > 0) {
+            listaHistorico.innerHTML += `
+                <tr>
+                    <td>${d.criado_em || "-"}</td>
+                    <td>${d.descricao}</td>
+                    <td style="color:var(--success); font-weight:700">
+                        ${this.fmt(pago)}
+                    </td>
+                    <td>${d.status || "PAGO"}</td>
+                </tr>
+            `;
+        }
+    });
+},
 
     async pay(id, nome) {
-        const v = prompt(`Confirmar pagamento para ${nome}:`);
-        if(!v) return;
-        document.body.style.opacity = "0.5";
-        await fetch(API, { method: "POST", mode: "no-cors", body: JSON.stringify({ tipo: "pagamento", id_despesa: id, valor: v.replace(',','.') }) });
-        alert("Sucesso! Atualizando...");
-        setTimeout(() => { document.body.style.opacity = "1"; this.init(); }, 2000);
+        const valor = prompt(`Informe o valor pago para ${nome}`);
+        if (!valor) {
+            showToast("warning", "Operação cancelada", "Nenhum valor informado.");
+            return;
+        }
+
+        showToast("info", "Processando", "Registrando pagamento...");
+
+        await fetch(API, {
+            method: "POST",
+            mode: "no-cors",
+            body: JSON.stringify({ tipo: "pagamento", id_despesa: id, valor })
+        });
+
+        showToast("success", "Pagamento confirmado", "Operação realizada com sucesso.");
+        setTimeout(() => this.init(), 2000);
     },
 
-    fmt(v) { return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+    fmt(v) {
+        return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
 };
 
 function Route(id, el) {
-    document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-    document.getElementById(id).style.display = 'block';
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    el.classList.add('active');
+    document.querySelectorAll(".page").forEach(p => p.style.display = "none");
+    document.getElementById(id).style.display = "block";
+    document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+    el.classList.add("active");
 }
 
 window.onload = () => App.init();

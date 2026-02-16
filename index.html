@@ -4,117 +4,117 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FinancePro | Gestão Inteligente</title>
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
-    
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-    <nav class="nav">
-        <div class="nav-header">
-            <span class="material-icons-outlined">analytics</span>
-            <span>FinancePro</span>
-        </div>
-        
-        <div class="nav-item active" onclick="Route('dash', this)">
-            <span class="material-icons-outlined">dashboard</span>
-            <span>Dashboard</span>
-        </div>
-        
-        <div class="nav-item" onclick="Route('pay', this)">
-            <span class="material-icons-outlined">account_balance_wallet</span>
-            <span>Contas a Pagar</span>
-        </div>
-        
-        <div class="nav-item" onclick="Route('hist', this)">
-            <span class="material-icons-outlined">history_edu</span>
-            <span>Histórico</span>
-        </div>
-    </nav>
+<nav class="nav">
+    <div class="nav-header">
+        <span class="material-icons-outlined">analytics</span>
+        <span>FinancePro</span>
+    </div>
 
-    <main class="content">
-        
-        <section id="dash" class="page">
-            <header>
-                <h1>Resumo Financeiro</h1>
-                <p>Acompanhamento de metas e pagamentos efetivados.</p>
-            </header>
-            
-            <div class="grid">
-                <div class="card">
-                    <span class="card-label">Orçamento Total</span>
-                    <div class="val" id="bruto">R$ 0,00</div>
-                </div>
-                <div class="card">
-                    <span class="card-label" style="color: var(--success)">Efetivado</span>
-                    <div class="val" id="pago" style="color: var(--success)">R$ 0,00</div>
-                </div>
-                <div class="card">
-                    <span class="card-label" style="color: var(--danger)">Pendente</span>
-                    <div class="val" id="pend" style="color: var(--danger)">R$ 0,00</div>
-                </div>
-            </div>
+    <div class="nav-item active" onclick="Route('dash', this)">
+        <span class="material-icons-outlined">dashboard</span>
+        <span>Dashboard</span>
+    </div>
 
-            <div class="charts-wrapper">
-                <div class="chart-container">
-                    <p class="card-label" style="margin-bottom: 20px;">Visão Geral (Status)</p>
-                    <canvas id="chartDoughnut"></canvas>
-                </div>
-                <div class="chart-container">
-                    <p class="card-label" style="margin-bottom: 20px;">Distribuição por Mês</p>
-                    <canvas id="chartBars"></canvas>
-                </div>
-            </div>
-        </section>
+    <div class="nav-item" onclick="Route('pay', this)">
+        <span class="material-icons-outlined">account_balance_wallet</span>
+        <span>Contas a Pagar</span>
+    </div>
 
-        <section id="pay" class="page" style="display:none">
-            <header>
-                <h1>Contas em Aberto</h1>
-                <p>Selecione um item para registrar o pagamento.</p>
-            </header>
+    <div class="nav-item" onclick="Route('hist', this)">
+        <span class="material-icons-outlined">history_edu</span>
+        <span>Histórico</span>
+    </div>
+</nav>
+
+<main class="content">
+
+    <section id="dash" class="page">
+        <header>
+            <h1>Resumo Financeiro</h1>
+            <p>Acompanhamento de metas e pagamentos efetivados.</p>
+        </header>
+
+        <div class="grid">
             <div class="card">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>DESCRIÇÃO / CATEGORIA</th>
-                            <th>VENCIMENTO</th>
-                            <th>SALDO DEVEDOR</th>
-                            <th>AÇÃO</th>
-                        </tr>
-                    </thead>
-                    <tbody id="lista-pagar">
-                        </tbody>
-                </table>
+                <span class="card-label">Orçamento Total</span>
+                <div class="val" id="bruto">R$ 0,00</div>
             </div>
-        </section>
-
-        <section id="hist" class="page" style="display:none">
-            <header>
-                <h1>Extrato de Movimentações</h1>
-                <p>Histórico de todos os pagamentos realizados até agora.</p>
-            </header>
             <div class="card">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>MÊS REFERÊNCIA</th>
-                            <th>DESCRIÇÃO DO ITEM</th>
-                            <th>VALOR PAGO</th>
-                            <th>STATUS</th>
-                        </tr>
-                    </thead>
-                    <tbody id="lista-historico">
-                        </tbody>
-                </table>
+                <span class="card-label" style="color: var(--success)">Efetivado</span>
+                <div class="val" id="pago" style="color: var(--success)">R$ 0,00</div>
             </div>
-        </section>
+            <div class="card">
+                <span class="card-label" style="color: var(--danger)">Pendente</span>
+                <div class="val" id="pend" style="color: var(--danger)">R$ 0,00</div>
+            </div>
+        </div>
 
-    </main>
+        <div class="charts-wrapper">
+            <div class="chart-container">
+                <p class="card-label">Visão Geral (Status)</p>
+                <canvas id="chartDoughnut"></canvas>
+            </div>
+            <div class="chart-container">
+                <p class="card-label">Distribuição por Mês</p>
+                <canvas id="chartBars"></canvas>
+            </div>
+        </div>
+    </section>
 
-    <script src="js/script.js"></script>
+    <section id="pay" class="page" style="display:none">
+        <header>
+            <h1>Contas em Aberto</h1>
+            <p>Selecione um item para registrar o pagamento.</p>
+        </header>
+        <div class="card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>DESCRIÇÃO / CATEGORIA</th>
+                        <th>VENCIMENTO</th>
+                        <th>SALDO DEVEDOR</th>
+                        <th>AÇÃO</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-pagar"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="hist" class="page" style="display:none">
+        <header>
+            <h1>Extrato de Movimentações</h1>
+            <p>Histórico de todos os pagamentos realizados.</p>
+        </header>
+        <div class="card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>MÊS REFERÊNCIA</th>
+                        <th>DESCRIÇÃO DO ITEM</th>
+                        <th>VALOR PAGO</th>
+                        <th>STATUS</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-historico"></tbody>
+            </table>
+        </div>
+    </section>
+
+</main>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<script src="js/script.js"></script>
 </body>
 </html>

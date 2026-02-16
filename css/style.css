@@ -1,41 +1,64 @@
-:root { 
-    --primary: #6366f1; --success: #10b981; --danger: #f43f5e; --warning: #f59e0b;
-    --bg: #f1f5f9; --card: #ffffff; --text: #1e293b; --border: #e2e8f0;
+/* ================= TOASTS ================= */
+
+#toast-container {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
 }
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-body { background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
 
-/* Sidebar Moderna */
-.nav { width: 260px; background: #0f172a; color: white; position: fixed; height: 100vh; padding: 2rem 1rem; display: flex; flex-direction: column; gap: 10px; }
-.nav-header { padding: 0 1rem 2rem; font-weight: 800; font-size: 1.3rem; color: var(--primary); display: flex; align-items: center; gap: 10px; }
-.nav-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; color: #94a3b8; text-decoration: none; border-radius: 12px; cursor: pointer; transition: 0.3s; }
-.nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
-.nav-item.active { background: var(--primary); color: white; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4); }
+.toast {
+    background: white;
+    min-width: 300px;
+    max-width: 380px;
+    padding: 16px 18px;
+    border-radius: 16px;
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    box-shadow: 0 20px 40px rgba(15,23,42,.15);
+    border-left: 5px solid;
+    animation: slideIn .3s ease forwards;
+}
 
-/* Conteúdo */
-.content { margin-left: 260px; padding: 2rem; width: 100%; max-width: 1400px; }
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+.toast.hide {
+    animation: slideOut .3s ease forwards;
+}
 
-/* Cartões com Efeito */
-.card { background: var(--card); padding: 1.5rem; border-radius: 20px; border: 1px solid var(--border); transition: transform 0.3s ease; }
-.card:hover { transform: translateY(-5px); }
-.card-label { font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
-.val { font-size: 2rem; font-weight: 800; margin-top: 10px; }
+.toast-icon {
+    font-size: 26px;
+}
 
-/* Área de Gráficos */
-.charts-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem; }
-.chart-container { background: white; padding: 20px; border-radius: 20px; border: 1px solid var(--border); position: relative; }
+.toast-title {
+    font-weight: 800;
+    font-size: 14px;
+}
 
-/* Tabelas Estilizadas */
-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
-th { text-align: left; padding: 12px; color: #64748b; font-size: 0.75rem; font-weight: 700; }
-td { padding: 16px 12px; background: #fff; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-td:first-child { border-left: 1px solid var(--border); border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
-td:last-child { border-right: 1px solid var(--border); border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
+.toast-message {
+    font-size: 13px;
+    color: #475569;
+}
 
-.badge { padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
-.btn-pay { background: var(--primary); color: white; border: none; padding: 10px 18px; border-radius: 10px; cursor: pointer; font-weight: 700; transition: 0.2s; }
-.btn-pay:hover { opacity: 0.9; transform: scale(1.05); }
+.toast.success { border-color: #10b981; }
+.toast.success .toast-icon { color: #10b981; }
 
-@media (max-width: 1024px) { .charts-wrapper { grid-template-columns: 1fr; } }
-@media (max-width: 768px) { .nav { width: 100%; height: 70px; bottom: 0; top: auto; flex-direction: row; } .content { margin-left: 0; padding-bottom: 100px; } }
+.toast.error { border-color: #f43f5e; }
+.toast.error .toast-icon { color: #f43f5e; }
+
+.toast.warning { border-color: #f59e0b; }
+.toast.warning .toast-icon { color: #f59e0b; }
+
+.toast.info { border-color: #6366f1; }
+.toast.info .toast-icon { color: #6366f1; }
+
+@keyframes slideIn {
+    from { transform: translateX(120%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOut {
+    to { transform: translateX(120%); opacity: 0; }
+}
